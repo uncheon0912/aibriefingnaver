@@ -1,5 +1,103 @@
 // aibriefingnaver - 실시간 AEO 고도화 분석 비동기 인터랙션 엔진
 
+// Web Audio API 기반 미래지향적 프리미엄 오디오 합성 엔진
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function getAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new AudioCtx();
+    }
+    if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+    }
+    return audioCtx;
+}
+
+// 1. 타이핑 사운드 (틱/톡 클릭음)
+function playTickSound() {
+    try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.04);
+        
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.04);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.04);
+    } catch (e) {
+        console.warn("Audio play error", e);
+    }
+}
+
+// 2. 오류 사운드 (삐빅 묵직한 에러음)
+function playErrorSound() {
+    try {
+        const ctx = getAudioContext();
+        
+        const playBuzzer = (delay) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(160, ctx.currentTime + delay);
+            osc.frequency.linearRampToValueAtTime(90, ctx.currentTime + delay + 0.16);
+            
+            gain.gain.setValueAtTime(0.12, ctx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + delay + 0.16);
+            
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime + delay + 0.16);
+        };
+        
+        playBuzzer(0);
+        playBuzzer(0.18);
+    } catch (e) {
+        console.warn("Audio play error", e);
+    }
+}
+
+// 3. 성공 사운드 (도-솔-도 진입 성공 비프음)
+function playSuccessSound() {
+    try {
+        const ctx = getAudioContext();
+        
+        const playChime = (freq, delay, duration, vol) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+            
+            gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+            
+            osc.start(ctx.currentTime + delay);
+            osc.stop(ctx.currentTime + delay + duration);
+        };
+        
+        playChime(523.25, 0, 0.22, 0.08);    // C5
+        playChime(783.99, 0.07, 0.26, 0.08);   // G5
+        playChime(1046.50, 0.14, 0.4, 0.1);  // C6
+    } catch (e) {
+        console.warn("Audio play error", e);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const searchForm = document.getElementById("search-form");
     const keywordInput = document.getElementById("keyword-input");
@@ -49,24 +147,33 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // [신규] 비밀번호 입력할 때 틱 소리 재생
+    authPasswordInput.addEventListener("input", () => {
+        playTickSound();
+    });
+
     // 인증 폼 전송 핸들러
     authForm.addEventListener("submit", (e) => {
         e.preventDefault();
         const pwd = authPasswordInput.value.trim();
         if (pwd === "0988" || pwd === "5420") {
+            playSuccessSound(); // 성공 차임 사운드
             sessionStorage.setItem("mydamgong_token", pwd);
             authModal.classList.add("hide");
             authErrorMsg.classList.add("hide");
             authPasswordInput.value = "";
             
+            // [요청사항] 로그인해서 들어갔을 때 검색어 입력창을 빈 칸으로!
+            keywordInput.value = "";
+            
             // 인증 완료 후 초기 쿼리 파라미터가 있었다면 실시간 분석 자동 트리거
             const urlParams = new URLSearchParams(window.location.search);
             const initialKeyword = urlParams.get("keyword");
             if (initialKeyword) {
-                keywordInput.value = initialKeyword;
                 performAnalysis(initialKeyword, false);
             }
         } else {
+            playErrorSound(); // 삐빅 오류 사운드
             authErrorMsg.textContent = "올바르지 않은 비밀번호입니다.";
             authErrorMsg.classList.remove("hide");
             authPasswordInput.value = "";
@@ -356,12 +463,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     const initialKeyword = urlParams.get("keyword");
     
+    // [요청사항] 왼쪽 상단 로고 클릭 시 쿼리 파라미터 소거하고 홈 새로고침 이동
+    const logoBtn = document.getElementById("logo-btn");
+    if (logoBtn) {
+        logoBtn.addEventListener("click", () => {
+            window.location.href = window.location.origin + window.location.pathname;
+        });
+    }
+    
     if (checkAuthentication()) {
         if (initialKeyword) {
-            keywordInput.value = initialKeyword;
+            // [요청사항] 자동 분석은 돌리되 검색 필드는 깨끗하게 빈 값 보장!
+            keywordInput.value = "";
             history.replaceState({ keyword: initialKeyword }, "", window.location.search);
             performAnalysis(initialKeyword, false);
         } else {
+            keywordInput.value = "";
             history.replaceState({ keyword: "" }, "", window.location.search);
         }
     } else {
