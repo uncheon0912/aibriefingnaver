@@ -47,7 +47,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 3. 실시간 분석 실행 함수
-    async function performAnalysis(keyword) {
+    async function performAnalysis(keyword, pushHistory = true) {
+        if (pushHistory) {
+            history.pushState({ keyword: keyword }, "", `?keyword=${encodeURIComponent(keyword)}`);
+        }
+
         btnSpinner.classList.remove("hide");
         loadingState.classList.remove("hide");
         resultSection.classList.add("hide");
@@ -271,5 +275,29 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             aeoChecklist.innerHTML = `<p class="empty-state-small">지정된 AEO 가이드라인이 없습니다.</p>`;
         }
+    }
+
+    // 5. 뒤로 가기 / 앞으로 가기 (popstate) 이벤트 감지
+    window.addEventListener("popstate", async (e) => {
+        if (e.state && e.state.keyword) {
+            keywordInput.value = e.state.keyword;
+            await performAnalysis(e.state.keyword, false);
+        } else {
+            // 초기 빈 화면 복원
+            keywordInput.value = "";
+            resultSection.classList.add("hide");
+            loadingState.classList.add("hide");
+        }
+    });
+
+    // 6. 초기 로드 시 URL 파라미터 분석 및 자동 진단
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialKeyword = urlParams.get("keyword");
+    if (initialKeyword) {
+        keywordInput.value = initialKeyword;
+        history.replaceState({ keyword: initialKeyword }, "", window.location.search);
+        performAnalysis(initialKeyword, false);
+    } else {
+        history.replaceState({ keyword: "" }, "", window.location.search);
     }
 });
