@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aibriefingnaver - 네이버 AI 브리핑 & AEO 실시간 키워드 진단기</title>
+    <meta name="description" content="네이버 AI 브리핑(Generative Search) 노출 진단, 검색량 수집, 포화도 예측 및 AEO 분석을 한 번에 제공하는 프리미엄 지능형 검색 마케팅 분석기입니다.">
+    <!-- Google Fonts Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 백그라운드 우주 네온 광원 이펙트 -->
+    <div class="bg-glow bg-glow-purple"></div>
+    <div class="bg-glow bg-glow-blue"></div>
+
+    <div class="app-container">
+        <!-- 상단 헤더 영역 -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
+                <span class="logo-text">ai<span>briefing</span>naver</span>
+            </div>
+            <div class="header-badge">
+                <span class="badge-dot"></span> NAVER AEO 진단 베타 v1.0
+            </div>
+        </header>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="main-content">
+            <!-- 소개 문구 및 타이틀 -->
+            <section class="hero-section">
+                <h1>네이버 AI 브리핑 노출 진단 및 분석</h1>
+                <p>원하는 키워드를 입력해 보세요. 실시간 네이버 검색 트래픽과 AI 브리핑 답변 구조, 인용 출처 정보를 즉시 수집하고 분석해 줍니다.</p>
+            </section>
+
+            <!-- 검색바 카드 (유리 질감) -->
+            <section class="search-card glass-panel">
+                <form id="search-form" class="search-form">
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="keyword-input" placeholder="분석할 키워드를 입력하세요 (예: geo aeo 의 차이점은)" required autocomplete="off">
+                    </div>
+                    <button type="submit" class="btn-submit">
+                        <span>진단 시작</span>
+                        <i class="fa-solid fa-circle-notch spinner-icon hide" id="btn-spinner"></i>
+                    </button>
+                </form>
+                <div class="recommendations">
+                    <span class="rec-title">추천 검색어 :</span>
+                    <button class="rec-tag">geo aeo 의 차이점은</button>
+                    <button class="rec-tag">사과 효능</button>
+                    <button class="rec-tag">애플 헤드폰 추천</button>
+                </div>
+            </section>
+
+            <!-- 로딩 화면 -->
+            <div id="loading-state" class="loading-state hide">
+                <div class="neural-loader">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <p class="loading-text">네이버 광고 API 및 통합검색 데이터를 실시간 스캔하는 중입니다...</p>
+            </div>
+
+            <!-- 분석 결과 섹션 (기본 숨김) -->
+            <div id="result-section" class="result-section hide">
+                <!-- 1. 핵심 요약 메트릭 카드 -->
+                <div class="metrics-grid">
+                    <!-- AI 브리핑 활성화 카드 -->
+                    <div class="metric-card glass-panel" id="card-ai-status">
+                        <div class="card-icon-wrapper purple-neon">
+                            <i class="fa-solid fa-microchip"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">AI 브리핑 상태</span>
+                            <h3 class="metric-value" id="ai-active-status">-</h3>
+                        </div>
+                        <div class="card-glow"></div>
+                    </div>
+
+                    <!-- 월간 검색량 카드 -->
+                    <div class="metric-card glass-panel" id="card-search-volume">
+                        <div class="card-icon-wrapper blue-neon">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">월간 총 검색량</span>
+                            <h3 class="metric-value" id="total-search-volume">-</h3>
+                            <span class="metric-sub" id="search-vol-breakdown">PC - | 모바일 -</span>
+                        </div>
+                        <div class="card-glow"></div>
+                    </div>
+
+                    <!-- 경쟁강도/포화도 카드 -->
+                    <div class="metric-card glass-panel" id="card-competition">
+                        <div class="card-icon-wrapper green-neon">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">경쟁 포화도</span>
+                            <h3 class="metric-value" id="competition-level">-</h3>
+                            <span class="metric-sub" id="saturation-rate">비율: -% (문서 수: -건)</span>
+                        </div>
+                        <div class="card-glow"></div>
+                    </div>
+                </div>
+
+                <!-- 2. AI 브리핑 상세 요약 분석 보드 -->
+                <div class="analysis-board-grid">
+                    <!-- AI 브리핑 내용 보드 (좌측 대형 보드) -->
+                    <div class="board-column glass-panel main-board">
+                        <div class="board-header">
+                            <i class="fa-solid fa-robot header-icon text-glow-purple"></i>
+                            <h2>네이버 AI 브리핑 실시간 요약</h2>
+                            <span class="board-badge" id="ai-active-badge">미노출</span>
+                        </div>
+                        <div class="board-content" id="ai-briefing-body">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-circle-info"></i>
+                                <p>해당 키워드는 네이버에서 AI 브리핑을 제공하지 않는 키워드이거나, 정보를 수집할 수 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 출처 및 연관 추천 질문 (우측 보드) -->
+                    <div class="board-column-side">
+                        <!-- 출처 목록 카드 -->
+                        <div class="board-column glass-panel side-card">
+                            <div class="board-header">
+                                <i class="fa-solid fa-quote-left header-icon text-glow-blue"></i>
+                                <h2>인용 본문 출처 리스트</h2>
+                            </div>
+                            <div class="board-content" id="ai-sources-list">
+                                <div class="empty-state-small">인용된 출처가 존재하지 않습니다.</div>
+                            </div>
+                        </div>
+
+                        <!-- 관련 추천 질문 카드 -->
+                        <div class="board-column glass-panel side-card">
+                            <div class="board-header">
+                                <i class="fa-solid fa-circle-question header-icon text-glow-green"></i>
+                                <h2>AI 관련 질문 추천</h2>
+                            </div>
+                            <div class="board-content" id="ai-questions-list">
+                                <div class="empty-state-small">추천된 질문 리스트가 존재하지 않습니다.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 하단 푸터 -->
+        <footer class="app-footer">
+            <p>&copy; 2026 aibriefingnaver. All rights reserved. Powered by Naver Search Ad API.</p>
+        </footer>
+    </div>
+    
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+</html>
