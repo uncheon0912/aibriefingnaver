@@ -258,7 +258,7 @@ def scrape_naver_ai_briefing(keyword: str):
                     
             # [신규] 인용 썸네일 멀티미디어 가공
             multimedia = []
-            for item in raw_multimedia[:4]:
+            for item in raw_multimedia[:15]:
                 thumbnail_url = item.get("thumbnailUrl", "").strip()
                 if not thumbnail_url:
                     continue
