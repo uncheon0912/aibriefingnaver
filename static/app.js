@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     multiHtml += `
                         <a href="${item.url}" target="_blank" class="thumbnail-card" title="클릭하여 원본 이미지 문서 확인">
                             <div class="thumbnail-img-wrapper">
-                                <img src="${item.thumbnail_url}" alt="${item.title}" class="thumbnail-img" loading="lazy">
+                                <img src="${item.thumbnail_url}" alt="${item.title}" class="thumbnail-img" loading="lazy" referrerpolicy="no-referrer">
                                 <span class="thumbnail-platform-badge">${item.platform}</span>
                             </div>
                             <div class="thumbnail-content">
