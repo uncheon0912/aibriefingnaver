@@ -11,8 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Custom CSS (캐시 방지 버전 적용) -->
+    <link rel="stylesheet" href="style.css?v=1.3">
 </head>
 <body>
     <!-- 백그라운드 우주 네온 광원 이펙트 -->
@@ -112,25 +112,72 @@
                     </div>
                 </div>
 
-                <!-- 2. AI 브리핑 상세 요약 분석 보드 -->
+                <!-- 2. AI 브리핑 상세 요약 분석 보드 (2열 구조) -->
                 <div class="analysis-board-grid">
-                    <!-- AI 브리핑 내용 보드 (좌측 대형 보드) -->
-                    <div class="board-column glass-panel main-board">
-                        <div class="board-header">
-                            <i class="fa-solid fa-robot header-icon text-glow-purple"></i>
-                            <h2>네이버 AI 브리핑 실시간 요약</h2>
-                            <span class="board-badge" id="ai-active-badge">미노출</span>
+                    <!-- 2.1. 좌측 메인 영역 (AI 브리핑 결과 및 연관검색어 테이블) -->
+                    <div class="main-column">
+                        <!-- AI 브리핑 요약 보드 -->
+                        <div class="board-column glass-panel main-board">
+                            <div class="board-header">
+                                <i class="fa-solid fa-robot header-icon text-glow-purple"></i>
+                                <h2>네이버 AI 브리핑 실시간 요약</h2>
+                                <span class="board-badge" id="ai-active-badge">미노출</span>
+                            </div>
+                            <div class="board-content" id="ai-briefing-body">
+                                <div class="empty-state">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    <p>해당 키워드는 네이버에서 AI 브리핑을 제공하지 않는 키워드이거나, 정보를 수집할 수 없습니다.</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="board-content" id="ai-briefing-body">
-                            <div class="empty-state">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <p>해당 키워드는 네이버에서 AI 브리핑을 제공하지 않는 키워드이거나, 정보를 수집할 수 없습니다.</p>
+
+                        <!-- 연관 검색어 분석 테이블 보드 (나에오 대시보드 스크린샷 2번 완벽 대응) -->
+                        <div class="board-column glass-panel table-board">
+                            <div class="board-header">
+                                <i class="fa-solid fa-table-list header-icon text-glow-blue"></i>
+                                <h2>연관 검색어 트래픽 및 경쟁 분석 (Top 8)</h2>
+                            </div>
+                            <div class="board-content">
+                                <div class="table-responsive">
+                                    <table class="premium-table">
+                                        <thead>
+                                            <tr>
+                                                <th>추천 연관 검색어</th>
+                                                <th>PC 검색량</th>
+                                                <th>모바일 검색량</th>
+                                                <th>월간 총합</th>
+                                                <th>예측 발행글</th>
+                                                <th>경쟁강도</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="related-keywords-tbody">
+                                            <tr>
+                                                <td colspan="6" class="text-center">조회된 연관 검색어가 없습니다.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 출처 및 연관 추천 질문 (우측 보드) -->
+                    <!-- 2.2. 우측 사이드바 영역 (출처, 가이드라인 체크리스트, 관련 질문) -->
                     <div class="board-column-side">
+                        <!-- AEO 블로그 가점 가이드라인 체크리스트 (브랜드/병원 최적화 가이드 신규 추가) -->
+                        <div class="board-column glass-panel side-card aeo-prescription-card">
+                            <div class="board-header">
+                                <i class="fa-solid fa-notes-medical header-icon text-glow-purple"></i>
+                                <h2>AEO 블로그 노출 처방전</h2>
+                                <span class="category-badge" id="aeo-category-badge">일반 정보</span>
+                            </div>
+                            <div class="board-content">
+                                <p class="aeo-intro">이 키워드로 네이버 블로그 포스팅을 작성할 때, AI 브리핑에 채택 및 인용되기 위한 실무 가이드라인입니다.</p>
+                                <div class="aeo-checklist-wrapper" id="aeo-checklist">
+                                    <!-- 동적으로 추가될 체크리스트 목록 -->
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 출처 목록 카드 -->
                         <div class="board-column glass-panel side-card">
                             <div class="board-header">
@@ -163,7 +210,7 @@
         </footer>
     </div>
     
-    <!-- Custom JS -->
-    <script src="app.js"></script>
+    <!-- Custom JS (캐시 방지 버전 적용) -->
+    <script src="app.js?v=1.3"></script>
 </body>
 </html>
