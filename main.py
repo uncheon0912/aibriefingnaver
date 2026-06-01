@@ -166,6 +166,7 @@ def scrape_naver_ai_briefing(keyword: str):
             raw_markdown = summary.get("markdown", "")
             raw_sources = props.get("sources", [])
             raw_questions = props.get("relatedQuestions", [])
+            raw_multimedia = props.get("multimedia", [])
             
             # [최첨단 혁신] 만약 최초 마크다운이 비어 있고 비동기 apiURL이 존재한다면, 2차 SSE EventStream 호출 감행
             if not raw_markdown and api_url:
@@ -207,6 +208,9 @@ def scrape_naver_ai_briefing(keyword: str):
                                     elif current_event == "relatedQuestions":
                                         if isinstance(obj, list):
                                             raw_questions = obj
+                                    elif current_event == "multimedia":
+                                        if isinstance(obj, list):
+                                            raw_multimedia = obj
                                 except:
                                     pass
                                     
@@ -252,12 +256,47 @@ def scrape_naver_ai_briefing(keyword: str):
                     clean_q = re.sub(r"^\d+\.\s*", "", title)
                     related_questions.append(clean_q)
                     
+            # [신규] 인용 썸네일 멀티미디어 가공
+            multimedia = []
+            for item in raw_multimedia[:4]:
+                thumbnail_url = item.get("thumbnailUrl", "").strip()
+                if not thumbnail_url:
+                    continue
+                    
+                platform = item.get("platform", "").strip()
+                if not platform:
+                    match = re.search(r"https?://([^/]+)", item.get("url", ""))
+                    platform = match.group(1) if match else "본문 출처"
+                    
+                platform = re.sub(r"^\[\d+\]\s*|\s*\+\d+$|블로그|카페", "", platform).strip()
+                if not platform:
+                    platform = "웹 사이트"
+                    
+                date_str = item.get("dateText", "").strip()
+                if not date_str and item.get("datetime"):
+                    try:
+                        import datetime
+                        dt = datetime.datetime.fromtimestamp(item.get("datetime") / 1000.0)
+                        date_str = dt.strftime("%Y.%m.%d")
+                    except:
+                        date_str = ""
+                        
+                multimedia.append({
+                    "thumbnail_url": thumbnail_url,
+                    "title": item.get("title", "인용 이미지 출처").strip(),
+                    "author": item.get("name", "작성자").strip(),
+                    "platform": platform,
+                    "url": item.get("url", ""),
+                    "date": date_str if date_str else "최근 작성"
+                })
+                    
             if len(answer_html) > 15:
                 return {
                     "active": True,
                     "answer": answer_html,
                     "sources": sources,
-                    "related_questions": related_questions
+                    "related_questions": related_questions,
+                    "multimedia": multimedia
                 }
 
         # ----------------------------------------------------
@@ -428,7 +467,8 @@ def scrape_naver_ai_briefing(keyword: str):
             "active": True if len(answer_text) > 15 else False,
             "answer": answer_text if len(answer_text) > 15 else "AI 브리핑 답변 본문 영역을 파싱할 수 없습니다.",
             "sources": sources[:5],
-            "related_questions": related_questions[:3]
+            "related_questions": related_questions[:3],
+            "multimedia": []
         }
         
     except Exception as e:

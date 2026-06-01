@@ -24,6 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const relatedKeywordsTbody = document.getElementById("related-keywords-tbody");
     const aeoCategoryBadge = document.getElementById("aeo-category-badge");
     const aeoChecklist = document.getElementById("aeo-checklist");
+    
+    // [신규] 인용 썸네일 출처 관련 엘리먼트
+    const multimediaBoard = document.getElementById("multimedia-board");
+    const aiMultimediaList = document.getElementById("ai-multimedia-list");
 
     // 1. 검색 폼 서브밋 핸들러
     searchForm.addEventListener("submit", async (e) => {
@@ -88,11 +92,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `;
             
+            // [신규 고도화] 인용 썸네일 멀티미디어 리스트 렌더링
+            if (ai.multimedia && ai.multimedia.length > 0) {
+                multimediaBoard.classList.remove("hide");
+                let multiHtml = "";
+                ai.multimedia.forEach(item => {
+                    multiHtml += `
+                        <a href="${item.url}" target="_blank" class="thumbnail-card" title="클릭하여 원본 이미지 문서 확인">
+                            <div class="thumbnail-img-wrapper">
+                                <img src="${item.thumbnail_url}" alt="${item.title}" class="thumbnail-img" loading="lazy">
+                                <span class="thumbnail-platform-badge">${item.platform}</span>
+                            </div>
+                            <div class="thumbnail-content">
+                                <span class="thumbnail-title">${item.title}</span>
+                                <div class="thumbnail-meta">
+                                    <span class="thumbnail-author">${item.author}</span>
+                                    <span class="thumbnail-date">${item.date}</span>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                });
+                aiMultimediaList.innerHTML = multiHtml;
+            } else {
+                multimediaBoard.classList.add("hide");
+                aiMultimediaList.innerHTML = "";
+            }
+
             // [초고도화] 출처 리스트 렌더링 (스크린샷 12번 레이아웃 완벽 이식)
             if (ai.sources && ai.sources.length > 0) {
                 let sourcesHtml = '<div class="source-list-wrapper">';
                 ai.sources.forEach(src => {
-                    // 설명글이 없으면 깔끔하게 도메인/이름만 표시
                     const descStr = src.description ? src.description : "출처 정보 페이지 링크";
                     sourcesHtml += `
                         <a href="${src.url}" target="_blank" class="source-item" title="클릭하여 원본 출처 확인">
@@ -152,6 +182,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `;
             
+            multimediaBoard.classList.add("hide");
+            aiMultimediaList.innerHTML = "";
             aiSourcesList.innerHTML = `<div class="empty-state-small">인용된 본문 출처 링크가 존재하지 않습니다.</div>`;
             aiQuestionsList.innerHTML = `<div class="empty-state-small">추천된 질문 리스트가 존재하지 않습니다.</div>`;
         }
