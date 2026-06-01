@@ -100,6 +100,8 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-size: 1.6rem;
+    display: inline-block;
+    animation: magicFloat 3s ease-in-out infinite;
 }
 
 .logo-text {
@@ -882,6 +884,29 @@ body {
 @keyframes bounce {
     from { transform: translateY(0); }
     to { transform: translateY(-12px); }
+}
+
+@keyframes magicFloat {
+    0% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: drop-shadow(0 0 2px var(--neon-purple-glow));
+    }
+    25% {
+        transform: translateY(-3px) rotate(5deg) scale(1.05);
+        filter: drop-shadow(0 0 8px var(--neon-purple-glow));
+    }
+    50% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: drop-shadow(0 0 2px var(--neon-purple-glow));
+    }
+    75% {
+        transform: translateY(3px) rotate(-5deg) scale(0.95);
+        filter: drop-shadow(0 0 8px var(--neon-blue-glow));
+    }
+    100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: drop-shadow(0 0 2px var(--neon-purple-glow));
+    }
 }
 
 /* 반응형 모바일 브레이크포인트 */
