@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import uvicorn
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import requests
@@ -8,11 +8,17 @@ from bs4 import BeautifulSoup
 import re
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from collections import defaultdict
+from datetime import datetime, date
 
 # 기존 네이버 검색광고 API 모듈 가져오기
 from naver_search_ad import get_keyword_search_volume
 
 app = FastAPI(title="aibriefingnaver API", version="1.0")
+
+# IP별 게스트 요청 내역 메모리 관리 스토리지
+# 구조: { ip_address: { "timestamps": [datetime, ...], "daily_count": { date_obj: count } } }
+guest_rate_limits = defaultdict(lambda: {"timestamps": [], "daily_count": defaultdict(int)})
 
 # 멀티스레딩 처리를 위한 엑시큐터 설정 (동시 요청 처리 속도 최적화)
 executor = ThreadPoolExecutor(max_workers=10)
@@ -598,11 +604,51 @@ def generate_aeo_checklist(keyword: str, is_ai_active: bool):
     }
 
 @app.get("/api/analyze")
-async def analyze_keyword(keyword: str = Query(..., description="분석할 검색어 키워드 입력")):
+async def analyze_keyword(
+    request: Request,
+    keyword: str = Query(..., description="분석할 검색어 키워드 입력"),
+    token: str = Query(None, description="인증 토큰 비밀번호")
+):
     """
     키워드를 전달받아 월간 검색량(네이버 광고 API) 및 AI 브리핑 상태(실시간 스크래퍼)를 
     비동기로 동시 수집하여 연동 가공된 결과를 반환합니다.
     """
+    if not token:
+        raise HTTPException(status_code=401, detail="비밀번호를 입력해 주세요.")
+        
+    token = token.strip()
+    if token == "0988":
+        # 마스터 비밀번호: 무제한 검색 허용
+        pass
+    elif token == "5420":
+        # 게스트 비밀번호: 동일 IP 하루 10회, 1분 5회 쿨타임 제한
+        ip = request.client.host
+        now = datetime.now()
+        today = date.today()
+        
+        # 1) 1분 이내 쿨타임 체크 (5회 제한)
+        guest_rate_limits[ip]["timestamps"] = [
+            t for t in guest_rate_limits[ip]["timestamps"] if (now - t).total_seconds() < 60
+        ]
+        if len(guest_rate_limits[ip]["timestamps"]) >= 5:
+            raise HTTPException(
+                status_code=429, 
+                detail="[게스트 제한] 1분 이내에 5회 이상 검색할 수 없습니다. 쿨타임이 필요합니다."
+            )
+            
+        # 2) 일일 누적 검색 횟수 체크 (10회 제한)
+        if guest_rate_limits[ip]["daily_count"][today] >= 10:
+            raise HTTPException(
+                status_code=429, 
+                detail="[게스트 제한] 게스트 비밀번호로는 하루 최대 10회만 검색 가능합니다. 마스터 비밀번호를 사용해 주세요."
+            )
+            
+        # 통과 시 누적 기록 기입
+        guest_rate_limits[ip]["timestamps"].append(now)
+        guest_rate_limits[ip]["daily_count"][today] += 1
+    else:
+        raise HTTPException(status_code=401, detail="비밀번호가 올바르지 않습니다.")
+
     if not keyword or not keyword.strip():
         raise HTTPException(status_code=400, detail="키워드를 입력해 주세요.")
         

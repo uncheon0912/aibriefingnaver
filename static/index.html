@@ -19,6 +19,30 @@
     <div class="bg-glow bg-glow-purple"></div>
     <div class="bg-glow bg-glow-blue"></div>
 
+    <!-- 보안 비밀번호 인증 모달 (기본 숨김 해제 상태는 app.js에서 제어) -->
+    <div id="auth-modal" class="auth-modal-overlay hide">
+        <div class="auth-modal-card glass-panel">
+            <div class="auth-header">
+                <div class="auth-icon-circle purple-neon">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h2>미담공장 AX 인증</h2>
+                <p>대시보드 접속을 위해 부여받은 비밀번호를 입력해 주세요.</p>
+            </div>
+            <form id="auth-form" class="auth-form">
+                <div class="auth-input-wrapper">
+                    <i class="fa-solid fa-key auth-key-icon"></i>
+                    <input type="password" id="auth-password-input" placeholder="비밀번호 4자리 입력" required autocomplete="off" maxlength="15">
+                </div>
+                <button type="submit" class="btn-auth-submit">
+                    <span>인증 및 진입</span>
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </button>
+            </form>
+            <div id="auth-error-msg" class="auth-error-msg hide"></div>
+        </div>
+    </div>
+
     <div class="app-container">
         <!-- 상단 헤더 영역 -->
         <header class="app-header">

@@ -29,6 +29,51 @@ document.addEventListener("DOMContentLoaded", () => {
     const multimediaBoard = document.getElementById("multimedia-board");
     const aiMultimediaList = document.getElementById("ai-multimedia-list");
 
+    // [신규] 보안 인증 모달 관련 엘리먼트 정의
+    const authModal = document.getElementById("auth-modal");
+    const authForm = document.getElementById("auth-form");
+    const authPasswordInput = document.getElementById("auth-password-input");
+    const authErrorMsg = document.getElementById("auth-error-msg");
+
+    // 초기 비밀번호 확인 및 제어
+    function checkAuthentication() {
+        const savedToken = sessionStorage.getItem("mydamgong_token");
+        if (savedToken === "0988" || savedToken === "5420") {
+            authModal.classList.add("hide");
+            return true;
+        } else {
+            sessionStorage.removeItem("mydamgong_token");
+            authModal.classList.remove("hide");
+            authPasswordInput.focus();
+            return false;
+        }
+    }
+
+    // 인증 폼 전송 핸들러
+    authForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const pwd = authPasswordInput.value.trim();
+        if (pwd === "0988" || pwd === "5420") {
+            sessionStorage.setItem("mydamgong_token", pwd);
+            authModal.classList.add("hide");
+            authErrorMsg.classList.add("hide");
+            authPasswordInput.value = "";
+            
+            // 인증 완료 후 초기 쿼리 파라미터가 있었다면 실시간 분석 자동 트리거
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialKeyword = urlParams.get("keyword");
+            if (initialKeyword) {
+                keywordInput.value = initialKeyword;
+                performAnalysis(initialKeyword, false);
+            }
+        } else {
+            authErrorMsg.textContent = "올바르지 않은 비밀번호입니다.";
+            authErrorMsg.classList.remove("hide");
+            authPasswordInput.value = "";
+            authPasswordInput.focus();
+        }
+    });
+
     // 1. 검색 폼 서브밋 핸들러
     searchForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -48,6 +93,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 3. 실시간 분석 실행 함수
     async function performAnalysis(keyword, pushHistory = true) {
+        const token = sessionStorage.getItem("mydamgong_token");
+        if (!token) {
+            checkAuthentication();
+            return;
+        }
+
         if (pushHistory) {
             history.pushState({ keyword: keyword }, "", `?keyword=${encodeURIComponent(keyword)}`);
         }
@@ -58,7 +109,18 @@ document.addEventListener("DOMContentLoaded", () => {
         keywordInput.blur();
 
         try {
-            const response = await fetch(`/api/analyze?keyword=${encodeURIComponent(keyword)}`);
+            const response = await fetch(`/api/analyze?keyword=${encodeURIComponent(keyword)}&token=${encodeURIComponent(token)}`);
+            
+            if (response.status === 401) {
+                sessionStorage.removeItem("mydamgong_token");
+                alert("인증 정보가 올바르지 않거나 만료되었습니다. 비밀번호를 다시 입력해 주세요.");
+                checkAuthentication();
+                throw new Error("인증 만료");
+            }
+            if (response.status === 429) {
+                const errData = await response.json();
+                throw new Error(errData.detail || "검색 제한이 초과되었습니다.");
+            }
             if (!response.ok) {
                 throw new Error("네이버 실시간 데이터 조회 도중 오류가 발생했습니다.");
             }
@@ -293,11 +355,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // 6. 초기 로드 시 URL 파라미터 분석 및 자동 진단
     const urlParams = new URLSearchParams(window.location.search);
     const initialKeyword = urlParams.get("keyword");
-    if (initialKeyword) {
-        keywordInput.value = initialKeyword;
-        history.replaceState({ keyword: initialKeyword }, "", window.location.search);
-        performAnalysis(initialKeyword, false);
+    
+    if (checkAuthentication()) {
+        if (initialKeyword) {
+            keywordInput.value = initialKeyword;
+            history.replaceState({ keyword: initialKeyword }, "", window.location.search);
+            performAnalysis(initialKeyword, false);
+        } else {
+            history.replaceState({ keyword: "" }, "", window.location.search);
+        }
     } else {
-        history.replaceState({ keyword: "" }, "", window.location.search);
+        if (initialKeyword) {
+            history.replaceState({ keyword: initialKeyword }, "", window.location.search);
+        } else {
+            history.replaceState({ keyword: "" }, "", window.location.search);
+        }
     }
 });
