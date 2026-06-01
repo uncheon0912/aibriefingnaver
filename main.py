@@ -603,6 +603,31 @@ def generate_aeo_checklist(keyword: str, is_ai_active: bool):
         "recommended_questions": recommended_questions
     }
 
+@app.get("/api/auth/status")
+async def get_auth_status(request: Request, token: str = Query(None, description="인증 비밀번호")):
+    """
+    전달된 토큰(비밀번호)의 권한 정보를 확인하고, 
+    게스트인 경우 현재 IP 기준으로 오늘 날짜의 남은 검색 횟수를 조회하여 반환합니다.
+    """
+    if not token:
+        raise HTTPException(status_code=401, detail="비밀번호가 전달되지 않았습니다.")
+        
+    token = token.strip()
+    if token == "0988":
+        return {"role": "master"}
+    elif token == "5420":
+        ip = request.client.host
+        today = date.today()
+        count = guest_rate_limits[ip]["daily_count"][today]
+        remaining = max(0, 10 - count)
+        return {
+            "role": "guest",
+            "remaining": remaining,
+            "limit": 10
+        }
+    else:
+        raise HTTPException(status_code=401, detail="유효하지 않은 비밀번호입니다.")
+
 @app.get("/api/analyze")
 async def analyze_keyword(
     request: Request,
@@ -859,6 +884,16 @@ async def analyze_keyword(
         "aeo_guide": aeo_guide
     }
     
+    # 게스트로 로그인한 경우 잔여 횟수 메타데이터 실시간 주입
+    if token == "5420":
+        ip = request.client.host
+        today = date.today()
+        count = guest_rate_limits[ip]["daily_count"][today]
+        analysis_data["guest_info"] = {
+            "remaining": max(0, 10 - count),
+            "limit": 10
+        }
+        
     return analysis_data
 
 # 정적 파일 서빙 등록 (프론트엔드 static 폴더)

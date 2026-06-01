@@ -133,11 +133,73 @@ document.addEventListener("DOMContentLoaded", () => {
     const authPasswordInput = document.getElementById("auth-password-input");
     const authErrorMsg = document.getElementById("auth-error-msg");
 
+    // [신규] 게스트 / 마스터 배지 처리용 엘리먼트
+    const headerBadgeContainer = document.getElementById("header-badge-container");
+    let guestTimerInterval = null;
+
+    // 게스트 재충전 타이머 (오늘 자정까지 카운트다운)
+    function startGuestTimer() {
+        if (guestTimerInterval) clearInterval(guestTimerInterval);
+        
+        const timerSpan = document.getElementById("guest-timer");
+        if (!timerSpan) return;
+
+        function updateTimer() {
+            const now = new Date();
+            const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+            const diff = midnight - now;
+
+            if (diff <= 0) {
+                timerSpan.textContent = "00:00:00";
+                fetchAuthStatus();
+                return;
+            }
+
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            const hStr = String(hours).padStart(2, "0");
+            const mStr = String(minutes).padStart(2, "0");
+            const sStr = String(seconds).padStart(2, "0");
+
+            timerSpan.textContent = `${hStr}:${mStr}:${sStr}`;
+        }
+
+        updateTimer();
+        guestTimerInterval = setInterval(updateTimer, 1000);
+    }
+
+    // 백엔드로부터 정확한 권한 정보 및 게스트 횟수 수집
+    async function fetchAuthStatus() {
+        const token = sessionStorage.getItem("mydamgong_token");
+        if (!token) return;
+
+        try {
+            const res = await fetch(`/api/auth/status?token=${encodeURIComponent(token)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.role === "master") {
+                    headerBadgeContainer.className = "header-badge master-badge";
+                    headerBadgeContainer.innerHTML = `<span class="badge-dot"></span> 마스터 회원 (무제한 분석)`;
+                    if (guestTimerInterval) clearInterval(guestTimerInterval);
+                } else if (data.role === "guest") {
+                    headerBadgeContainer.className = "header-badge guest-badge";
+                    headerBadgeContainer.innerHTML = `<span class="badge-dot"></span> 게스트 이용권: <span id="guest-count">${data.remaining}</span>/10회 | 충전까지 <span id="guest-timer">--:--:--</span>`;
+                    startGuestTimer();
+                }
+            }
+        } catch (e) {
+            console.error("인증 상태를 가져올 수 없습니다.", e);
+        }
+    }
+
     // 초기 비밀번호 확인 및 제어
     function checkAuthentication() {
         const savedToken = sessionStorage.getItem("mydamgong_token");
         if (savedToken === "0988" || savedToken === "5420") {
             authModal.classList.add("hide");
+            fetchAuthStatus(); // 권한 상태 및 횟수 렌더링 호출
             return true;
         } else {
             sessionStorage.removeItem("mydamgong_token");
@@ -233,6 +295,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const data = await response.json();
+            
+            // 게스트인 경우 실시간 잔여 검색 횟수 차감 렌더링
+            if (data.guest_info && document.getElementById("guest-count")) {
+                document.getElementById("guest-count").textContent = data.guest_info.remaining;
+            }
             renderAnalysisResults(data);
             
             loadingState.classList.add("hide");

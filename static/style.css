@@ -1255,5 +1255,46 @@ body {
     40%, 80% { transform: translateX(6px); }
 }
 
+/* 게스트 / 마스터 권한 배지 프리미엄 스타일 */
+.header-badge.guest-badge {
+    border: 1px solid rgba(56, 176, 0, 0.4) !important;
+    box-shadow: 0 0 10px rgba(56, 176, 0, 0.15);
+    background: rgba(56, 176, 0, 0.05);
+}
+
+.header-badge.guest-badge .badge-dot {
+    background-color: var(--neon-green) !important;
+    box-shadow: 0 0 8px var(--neon-green) !important;
+}
+
+.header-badge.guest-badge span {
+    font-weight: 700;
+}
+
+#guest-count {
+    color: var(--neon-green);
+    text-shadow: 0 0 5px var(--neon-green-glow);
+}
+
+#guest-timer {
+    font-family: var(--font-heading);
+    color: #ffffff;
+    font-weight: 600;
+    margin-left: 2px;
+}
+
+.header-badge.master-badge {
+    border: 1px solid rgba(157, 78, 221, 0.4) !important;
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.15);
+    background: rgba(157, 78, 221, 0.05);
+    color: #ffffff;
+}
+
+.header-badge.master-badge .badge-dot {
+    background-color: var(--neon-purple) !important;
+    box-shadow: 0 0 8px var(--neon-purple) !important;
+}
+
+
 
 
