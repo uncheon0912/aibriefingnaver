@@ -2266,6 +2266,53 @@ body {
     margin-bottom: 0.75rem;
 }
 
+/* ==========================================================================
+   추가: 블로그 진단 테이블 페이지네이션 럭셔리 다크 스타일
+   ========================================================================== */
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.pagination-wrapper.hide {
+    display: none !important;
+}
+
+.page-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.page-btn.active {
+    background: var(--primary-grad);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(123, 44, 191, 0.45), 0 0 8px var(--neon-purple-glow);
+}
+
 
 
 

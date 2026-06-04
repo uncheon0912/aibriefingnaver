@@ -163,8 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const chipCountAiActive = document.getElementById("chip-count-ai-active");
     const chipCountAiRecommend = document.getElementById("chip-count-ai-recommend");
 
-    // [신규] 기간 필터 및 AEO 상세 진단 팝업 모달 엘리먼트 정의
-    const periodSelect = document.getElementById("period-select");
+    // [신규] 조회 개수 필터 및 AEO 상세 진단 팝업 모달 엘리먼트 정의
+    const countSelect = document.getElementById("count-select");
     const aeoDetailModal = document.getElementById("aeo-detail-modal");
     const modalPostTitle = document.getElementById("modal-post-title");
     const modalPostLink = document.getElementById("modal-post-link");
@@ -180,7 +180,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentBlogPosts = []; // 최근 수집된 블로그 포스팅 데이터 보존
     let activeFilter = "all";
     let activeSort = "date";
-    let activePeriod = "all";
+    let activeLimit = 15;
+    let currentPage = 1;
+    const pageSize = 30;
 
     // 0. 사이드바 메뉴 탭 전환 바인딩
     menuKeywordAnalyzer.addEventListener("click", (e) => {
@@ -698,6 +700,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const blogId = extractBlogId(rawVal);
         if (!blogId) return;
 
+        // 페이지 번호 초기화
+        currentPage = 1;
+
         // 사이드바 대표 정보 동기화
         document.getElementById("sidebar-blog-name").textContent = blogId;
 
@@ -716,13 +721,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error("수집된 최근 포스트가 없습니다.");
             }
 
-            currentBlogPosts = posts.map(p => {
+            currentBlogPosts = posts.slice(0, activeLimit).map(p => {
                 // 대표 키워드 매핑 및 캐시화
                 const kw = extractRepresentativeKeyword(p.title, p.link);
                 return {
                     title: p.title,
                     link: p.link,
                     pub_date: p.pub_date,
+                    iso_date: p.iso_date,
                     keyword: kw,
                     search_volume: 0,
                     saturation_rate: 0,
@@ -821,19 +827,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return true;
         });
 
-        // 기간 필터 적용
-        if (activePeriod !== "all") {
-            const daysLimit = parseInt(activePeriod);
-            const now = new Date();
-            filtered = filtered.filter(p => {
-                if (!p.iso_date) return false;
-                const pDate = new Date(p.iso_date);
-                const diffTime = Math.abs(now - pDate);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return diffDays <= daysLimit;
-            });
-        }
-
         // 정렬 적용
         filtered.sort((a, b) => {
             if (activeSort === "date") return 0; // RSS가 가져온 최신 순 유지
@@ -842,18 +835,73 @@ document.addEventListener("DOMContentLoaded", () => {
             return 0;
         });
 
-        if (filtered.length === 0) {
+        const totalFiltered = filtered.length;
+        const paginationEl = document.getElementById("blog-pagination");
+        
+        if (totalFiltered > pageSize) {
+            paginationEl.classList.remove("hide");
+            renderPagination(totalFiltered);
+        } else {
+            paginationEl.classList.add("hide");
+            paginationEl.innerHTML = "";
+        }
+
+        if (totalFiltered === 0) {
             blogDiagnoseTbody.innerHTML = `<tr><td colspan="7" class="text-center">해당 필터에 매칭되는 포스팅이 없습니다.</td></tr>`;
             return;
         }
 
-        filtered.forEach((p, idx) => {
+        const startIdx = (currentPage - 1) * pageSize;
+        const endIdx = startIdx + pageSize;
+        const pagedFiltered = filtered.slice(startIdx, endIdx);
+
+        pagedFiltered.forEach((p) => {
             const originalIndex = currentBlogPosts.indexOf(p);
             html += buildRowHtml(p, originalIndex);
         });
 
         blogDiagnoseTbody.innerHTML = html;
         bindTableEvents();
+    }
+
+    // 페이지네이션 렌더링 함수
+    function renderPagination(totalCount) {
+        const paginationEl = document.getElementById("blog-pagination");
+        if (!paginationEl) return;
+        
+        const totalPages = Math.ceil(totalCount / pageSize);
+        
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+        
+        let html = "";
+        
+        // 이전 버튼
+        html += `<button class="page-btn prev-btn" ${currentPage === 1 ? 'disabled style="opacity: 0.3; cursor: not-allowed;"' : ''} data-page="${currentPage - 1}">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>`;
+        
+        // 페이지 번호 버튼들
+        for (let i = 1; i <= totalPages; i++) {
+            html += `<button class="page-btn num-btn ${currentPage === i ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        
+        // 다음 버튼
+        html += `<button class="page-btn next-btn" ${currentPage === totalPages ? 'disabled style="opacity: 0.3; cursor: not-allowed;"' : ''} data-page="${currentPage + 1}">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>`;
+        
+        paginationEl.innerHTML = html;
+        
+        // 이벤트 바인딩
+        paginationEl.querySelectorAll(".page-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                if (btn.hasAttribute("disabled")) return;
+                const targetPage = parseInt(btn.getAttribute("data-page"));
+                currentPage = targetPage;
+                renderBlogTable();
+            });
+        });
     }
 
     // 행 단위 HTML 생성기
@@ -1189,19 +1237,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // 상단 통계 수치 연산 및 실시간 렌더링
     function calculateBlogStats() {
         let targetPosts = currentBlogPosts;
-        
-        // 기간 필터 반영
-        if (activePeriod !== "all") {
-            const daysLimit = parseInt(activePeriod);
-            const now = new Date();
-            targetPosts = targetPosts.filter(p => {
-                if (!p.iso_date) return false;
-                const pDate = new Date(p.iso_date);
-                const diffTime = Math.abs(now - pDate);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return diffDays <= daysLimit;
-            });
-        }
 
         const total = targetPosts.length;
         if (total === 0) {
@@ -1324,12 +1359,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 4. 기간 필터 드롭다운 체인지 바인딩
-    if (periodSelect) {
-        periodSelect.addEventListener("change", () => {
-            activePeriod = periodSelect.value;
-            renderBlogTable();
-            calculateBlogStats();
+    // 4. 조회 개수 필터 드롭다운 체인지 바인딩
+    if (countSelect) {
+        countSelect.addEventListener("change", () => {
+            activeLimit = parseInt(countSelect.value);
+            
+            // 만약 이미 블로그 검색창에 값이 입력되어 있다면, 자동으로 재수집/재진단 시작
+            const rawVal = blogInput.value.trim();
+            const blogId = extractBlogId(rawVal);
+            if (blogId) {
+                triggerBlogAnalysis();
+            }
         });
     }
 

@@ -348,14 +348,14 @@
                                 <button class="chip" data-filter="ai-recommend">AI 추천 <span id="chip-count-ai-recommend">0</span></button>
                             </div>
                             
-                            <!-- 추가: 기간 필터 드롭다운 -->
+                            <!-- 조회 개수 선택 드롭다운 -->
                             <div class="period-filter-wrapper">
-                                <i class="fa-solid fa-calendar-days select-icon"></i>
-                                <select id="period-select" class="premium-select">
-                                    <option value="all" selected>전체 기간</option>
-                                    <option value="7">최근 7일</option>
-                                    <option value="30">최근 30일</option>
-                                    <option value="90">최근 90일</option>
+                                <i class="fa-solid fa-list-ol select-icon"></i>
+                                <select id="count-select" class="premium-select">
+                                    <option value="15" selected>15개 조회</option>
+                                    <option value="25">25개 조회 (+10)</option>
+                                    <option value="35">35개 조회 (+20)</option>
+                                    <option value="45">45개 조회 (+30)</option>
                                 </select>
                             </div>
 
@@ -387,6 +387,8 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <!-- 테이블 아래 페이지네이션 영역 -->
+                                <div id="blog-pagination" class="pagination-wrapper hide"></div>
                             </div>
                         </div>
                     </div>

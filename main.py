@@ -927,7 +927,7 @@ async def get_blog_posts(blog_id: str = Query(..., description="네이버 블로
         items_raw = re.findall(r"<item>(.*?)</item>", content_text, re.DOTALL)
         
         posts = []
-        for item in items_raw[:10]:
+        for item in items_raw[:50]:
             title_match = re.search(r"<title>(.*?)</title>", item, re.DOTALL)
             link_match = re.search(r"<link>(.*?)</link>", item, re.DOTALL)
             pub_date_match = re.search(r"<pubDate>(.*?)</pubDate>", item, re.DOTALL | re.IGNORECASE)
