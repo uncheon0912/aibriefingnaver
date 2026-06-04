@@ -785,14 +785,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 행 단위 HTML 생성기
     function buildRowHtml(p, index) {
+        // 링크 안전성 검사 (비어있거나 상대 경로인 경우 튕김 방지)
+        const isLinkValid = p.link && (p.link.startsWith("http://") || p.link.startsWith("https://"));
+        const linkHref = isLinkValid ? p.link : "javascript:void(0);";
+        const linkTarget = isLinkValid ? 'target="_blank"' : '';
+        const linkTitle = isLinkValid ? 'title="클릭하여 원본 블로그 글 새창 이동"' : 'title="링크가 올바르지 않습니다"';
+        const urlDisplay = isLinkValid ? p.link : '<span style="color:var(--neon-red); font-size:0.72rem; font-weight:500;">⚠️ 블로그 포스트 링크가 누락되었습니다. 새로고침 후 진단을 다시 시작해 주세요.</span>';
+
         if (p.loading) {
             return `
                 <tr id="blog-row-${index}">
                     <td>${p.pub_date || "-"}</td>
                     <td>
                         <div class="post-info-container">
-                            <a href="${p.link}" target="_blank" class="post-title-link">${p.title}</a>
-                            <span class="post-url-sub">${p.link}</span>
+                            <a href="${linkHref}" ${linkTarget} class="post-title-link" ${linkTitle}>${p.title}</a>
+                            <span class="post-url-sub">${urlDisplay}</span>
                         </div>
                     </td>
                     <td>
@@ -831,8 +838,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${p.pub_date || "-"}</td>
                 <td>
                     <div class="post-info-container">
-                        <a href="${p.link}" target="_blank" class="post-title-link" title="클릭하여 원본 블로그 글 새창 이동">${p.title}</a>
-                        <span class="post-url-sub">${p.link}</span>
+                        <a href="${linkHref}" ${linkTarget} class="post-title-link" ${linkTitle}>${p.title}</a>
+                        <span class="post-url-sub">${urlDisplay}</span>
                     </div>
                 </td>
                 <td>

@@ -913,21 +913,33 @@ async def get_blog_posts(blog_id: str = Query(..., description="네이버 블로
         encoding = response.apparent_encoding if response.apparent_encoding else "utf-8"
         content_text = response.content.decode(encoding, errors="replace")
         
-        # BeautifulSoup html.parser로 XML 파싱 호환 처리
-        soup = BeautifulSoup(content_text, "html.parser")
-        items = soup.find_all("item")
+        # CDATA 정제 헬퍼 함수
+        def clean_cdata(text):
+            if not text:
+                return ""
+            text = text.strip()
+            if text.startswith("<![CDATA[") and text.endswith("]]>"):
+                text = text[9:-3]
+            return text.strip()
+            
+        # BeautifulSoup html.parser의 XML <link> 자가 종결 태그 오파싱 방지를 위해 
+        # 원본 XML 문자열에서 정규식을 활용해 <item> 노드 및 하위 요소를 안전하게 100% 추출
+        items_raw = re.findall(r"<item>(.*?)</item>", content_text, re.DOTALL)
         
         posts = []
-        for item in items[:10]:
-            title = item.find("title").text if item.find("title") else "제목 없음"
-            link = item.find("link").text if item.find("link") else ""
+        for item in items_raw[:10]:
+            title_match = re.search(r"<title>(.*?)</title>", item, re.DOTALL)
+            link_match = re.search(r"<link>(.*?)</link>", item, re.DOTALL)
+            pub_date_match = re.search(r"<pubDate>(.*?)</pubDate>", item, re.DOTALL | re.IGNORECASE)
             
-            # pubDate 파싱 및 간단한 포맷 변경
-            pub_date = item.find("pubdate").text if item.find("pubdate") else ""
-            if pub_date:
-                # 'Tue, 02 Jun 2026 01:22:00 +0900' -> '06.02' 형식으로 포맷팅
+            title = clean_cdata(title_match.group(1)) if title_match else "제목 없음"
+            link = clean_cdata(link_match.group(1)) if link_match else ""
+            pub_date_raw = clean_cdata(pub_date_match.group(1)) if pub_date_match else ""
+            
+            pub_date = pub_date_raw
+            if pub_date_raw:
                 try:
-                    parts = pub_date.split()
+                    parts = pub_date_raw.split()
                     if len(parts) >= 4:
                         day = parts[1]
                         month_str = parts[2]
@@ -939,7 +951,7 @@ async def get_blog_posts(blog_id: str = Query(..., description="네이버 블로
                 except:
                     pass
             
-            # 타이틀 정제
+            # HTML 엔티티 복원
             title = BeautifulSoup(title, "html.parser").text
             
             posts.append({
@@ -953,6 +965,7 @@ async def get_blog_posts(blog_id: str = Query(..., description="네이버 블로
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"블로그 글 수집 중 오류: {str(e)}")
+
 
 @app.get("/api/blog/diagnose")
 async def diagnose_blog_post(
