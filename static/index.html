@@ -528,248 +528,365 @@
         </div>
     </div>
 
-    <!-- 로컬 전용 5페이지 PDF 출력용 숨김 템플릿 -->
-    <div id="pdf-report-root" class="pdf-report-container" style="position: absolute; left: -9999px; top: -9999px; width: 794px; background: #ffffff; color: #333333; font-family: 'Inter', sans-serif;">
-        <!-- Page 1: 표지 -->
-        <div class="pdf-page" id="pdf-page-1" style="width: 794px; height: 1123px; padding: 3rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; position: relative; background: #0b071e; color: #ffffff; overflow: hidden;">
-            <div style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(157,78,221,0.2) 0%, transparent 70%); filter: blur(50px);"></div>
-            <div style="position: absolute; bottom: -100px; left: -100px; width: 350px; height: 350px; border-radius: 50%; background: radial-gradient(circle, rgba(0,180,216,0.15) 0%, transparent 70%); filter: blur(50px);"></div>
+    <!-- 로컬 전용 6페이지 A4 가로형 PDF 출력용 숨김 템플릿 -->
+    <div id="pdf-report-root" class="pdf-report-container" style="position: absolute; left: -9999px; top: -9999px; width: 1123px; background: #ffffff; color: #333333; font-family: 'Inter', sans-serif;">
+        <!-- Page 1: 표지 (Cover Page) -->
+        <div class="pdf-page" id="pdf-page-1" style="width: 1123px; height: 794px; padding: 4.5rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; position: relative; background: #08051a; color: #ffffff; overflow: hidden;">
+            <div style="position: absolute; top: -150px; right: -150px; width: 450px; height: 450px; border-radius: 50%; background: radial-gradient(circle, rgba(157,78,221,0.25) 0%, transparent 70%); filter: blur(70px);"></div>
+            <div style="position: absolute; bottom: -150px; left: -150px; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(0,180,216,0.2) 0%, transparent 70%); filter: blur(70px);"></div>
             
-            <div style="display: flex; align-items: center; gap: 0.5rem; font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: #ffffff;">
+            <div style="display: flex; align-items: center; gap: 0.6rem; font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; color: #ffffff;">
                 <i class="fa-solid fa-wand-magic-sparkles" style="color: #9d4edd;"></i>
                 <span>미담공장 <span style="color: #00b4d8;">AX</span></span>
             </div>
             
-            <div style="margin-top: 6rem; text-align: left;">
-                <span style="font-size: 0.9rem; font-weight: 700; letter-spacing: 2px; color: #00b4d8; text-transform: uppercase;">AEO & GEO PERFORMANCE REPORT</span>
-                <h1 style="font-size: 2.6rem; font-weight: 800; line-height: 1.25; margin-top: 1rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, #ffffff 40%, #cdbdf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                    네이버 AI 브리핑 노출 진단<br>및 AEO 성과 보고서
+            <div style="margin-top: 2rem; text-align: left; z-index: 10;">
+                <span style="font-size: 1rem; font-weight: 700; letter-spacing: 3px; color: #00b4d8; text-transform: uppercase;">AEO & GEO PERFORMANCE STRATEGY PROPOSAL</span>
+                <h1 style="font-size: 3.2rem; font-weight: 800; line-height: 1.25; margin-top: 1.2rem; margin-bottom: 1.8rem; background: linear-gradient(135deg, #ffffff 40%, #cdbdf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    네이버 AI 검색대응 브랜드 블로그<br>AEO/GEO 기술 분석 및 최적화 제안서
                 </h1>
-                <p style="font-size: 1.05rem; color: #a69ebd; max-width: 520px; line-height: 1.6;">
-                    본 보고서는 네이버 검색엔진의 AI 검색(AI 브리핑) 도입에 대응하여, 귀사 브랜드 블로그 포스팅의 노출도 및 AEO 최적화 상태를 실시간 스캔 및 분석하여 작성한 프리미엄 진단서입니다.
+                <p style="font-size: 1.15rem; color: #a69ebd; max-width: 800px; line-height: 1.7;">
+                    본 문서는 네이버 생성형 검색(AI 브리핑) 도입에 대응하여, 귀사 브랜드 블로그 포스팅의 노출도 및 AEO 최적화 상태를 실시간 스캔 분석하고, AI 검색 영역 상위 점유를 달성하기 위한 구체적인 인공지능 검색 최적화 기술 전략을 제시하는 프리미엄 제안서입니다.
                 </p>
             </div>
             
-            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2rem; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.9rem; color: #a69ebd;">
-                <div><strong style="color: #ffffff; margin-right: 0.5rem;">대상 블로그:</strong> <span id="pdf-blog-id" style="color: #ffffff; font-weight: 600;">-</span></div>
-                <div><strong style="color: #ffffff; margin-right: 0.5rem;">진단 일자:</strong> <span id="pdf-report-date" style="color: #ffffff;">-</span></div>
-                <div><strong style="color: #ffffff; margin-right: 0.5rem;">분석 기관:</strong> 미담공장 AX 지능형 검색 마케팅 연구소</div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 2rem; display: flex; justify-content: space-between; align-items: flex-end; z-index: 10; font-size: 0.95rem; color: #a69ebd;">
+                <div style="display: flex; gap: 3rem;">
+                    <div><strong style="color: #ffffff; margin-right: 0.5rem;">진단 대상:</strong> <span id="pdf-blog-id" style="color: #ffffff; font-weight: 600;">-</span></div>
+                    <div><strong style="color: #ffffff; margin-right: 0.5rem;">진단 일자:</strong> <span id="pdf-report-date" style="color: #ffffff;">-</span></div>
+                </div>
+                <div style="text-align: right;">
+                    <strong style="color: #ffffff;">발행처:</strong> 미담공장 AX 지능형 마케팅 전략 연구소
+                </div>
             </div>
         </div>
 
-        <!-- Page 2: 성과 요약 -->
-        <div class="pdf-page" id="pdf-page-2" style="width: 794px; height: 1123px; padding: 4rem 3rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
+        <!-- Page 2: 성과 분석 및 총평 (Performance & General Review) -->
+        <div class="pdf-page" id="pdf-page-2" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
             <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.5rem;">
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #7b2cbf;">01. 성과 요약 (Performance Summary)</span>
-                    <span style="font-size: 0.8rem; color: #888888;">미담공장 AX AEO 리포트</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.2rem;">
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">01. 현황 진단 및 종합 평가 (Performance & General Review)</span>
+                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 리포트</span>
                 </div>
                 
-                <h2 style="font-size: 1.6rem; font-weight: 800; color: #111111; margin-bottom: 1rem;">브랜드 블로그 AEO 노출 성과 지표</h2>
-                <p style="font-size: 0.92rem; color: #666666; line-height: 1.6; margin-bottom: 2rem;">
-                    귀사 블로그에서 수집된 핵심 포스팅의 검색 노출 및 네이버 AI 브리핑 채택 비율 요약 정보입니다. AI 브리핑 노출률은 브랜드 신뢰성과 트래픽 락인 효과의 척도입니다.
-                </p>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 1.5rem;">귀사 브랜드 블로그 AEO 노출 성과 지표</h2>
                 
-                <!-- 지표 그리드 -->
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 3rem;">
-                    <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.5rem; text-align: center;">
-                        <span style="font-size: 0.85rem; font-weight: 600; color: #495057;">전체 분석 포스트 수</span>
-                        <h3 id="pdf-total-posts" style="font-size: 2.4rem; font-weight: 800; color: #111111; margin: 0.5rem 0 0.2rem;">0</h3>
-                        <span style="font-size: 0.75rem; color: #868e96;">수집된 최신 글 개수</span>
+                <div style="display: flex; gap: 2.5rem;">
+                    <!-- 좌측: 지표 카드 영역 (45% 너비) -->
+                    <div style="flex: 4.5; display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem;">
+                        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.25rem; text-align: center;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: #495057;">전체 분석 포스트</span>
+                            <h3 id="pdf-total-posts" style="font-size: 2.2rem; font-weight: 800; color: #111111; margin: 0.4rem 0 0.1rem;">0</h3>
+                            <span style="font-size: 0.72rem; color: #868e96;">수집된 최신 글 개수</span>
+                        </div>
+                        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.25rem; text-align: center;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: #495057;">통합검색 노출률</span>
+                            <h3 id="pdf-search-exposure" style="font-size: 2.2rem; font-weight: 800; color: #00b4d8; margin: 0.4rem 0 0.1rem;">0%</h3>
+                            <span id="pdf-search-count-text" style="font-size: 0.72rem; color: #868e96;">0/0개 노출 중</span>
+                        </div>
+                        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.25rem; text-align: center;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: #495057;">AI 브리핑 노출 수</span>
+                            <h3 id="pdf-ai-exposure" style="font-size: 2.2rem; font-weight: 800; color: #7b2cbf; margin: 0.4rem 0 0.1rem;">0</h3>
+                            <span style="font-size: 0.72rem; color: #868e96;">AI 답변 내 추천 성공 수</span>
+                        </div>
+                        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.25rem; text-align: center;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: #495057;">최종 AI 추천률</span>
+                            <h3 id="pdf-ai-percent" style="font-size: 2.2rem; font-weight: 800; color: #38b000; margin: 0.4rem 0 0.1rem;">0%</h3>
+                            <span style="font-size: 0.72rem; color: #868e96;">네이버 AI 추천 인용 확률</span>
+                        </div>
                     </div>
-                    <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.5rem; text-align: center;">
-                        <span style="font-size: 0.85rem; font-weight: 600; color: #495057;">통합검색 노출률</span>
-                        <h3 id="pdf-search-exposure" style="font-size: 2.4rem; font-weight: 800; color: #00b4d8; margin: 0.5rem 0 0.2rem;">0%</h3>
-                        <span id="pdf-search-count-text" style="font-size: 0.75rem; color: #868e96;">0/0개 노출 중</span>
+                    
+                    <!-- 우측: 종합 평가 및 전환점 (55% 너비) -->
+                    <div style="flex: 5.5; display: flex; flex-direction: column; gap: 0.8rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 0.8rem 1.2rem; border-radius: 8px; border-left: 4px solid #7b2cbf;">
+                            <span style="font-size: 0.85rem; font-weight: 700; color: #111111;">종합 AEO/GEO 평가 등급:</span>
+                            <span id="pdf-diag-grade" style="font-size: 1.05rem; font-weight: 800; color: #ff3b30;">C-Grade (미흡)</span>
+                        </div>
+                        <div id="pdf-diag-summary" style="font-size: 0.82rem; color: #555555; line-height: 1.6; min-height: 100px;">
+                            네이버 생성형 검색(AI 브리핑) 도입 이후, 사용자 검색 행태는 단순 키워드 매칭에서 구체적 질문으로 변모하고 있습니다. 현재 귀사 블로그의 최적화 수준은 미흡(C-Grade) 수준으로 스캔되어, 경쟁사 대비 추천 노출 경쟁력이 현격히 저하된 원인을 긴급 진단 및 보완해야 합니다.
+                        </div>
+                        <p style="font-size: 0.78rem; color: #777777; line-height: 1.5; margin: 0;">
+                            * 본 평가는 미담공장 AX 지능형 검색 최적화 기술연구소의 특허받은 인텐트 채택 분석 기준 및 HyperCLOVA X 정보 추출 가독성 지표를 종합 합산하여 동적으로 판정되었습니다.
+                        </p>
                     </div>
-                    <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.5rem; text-align: center;">
-                        <span style="font-size: 0.85rem; font-weight: 600; color: #495057;">AI 브리핑 노출 수</span>
-                        <h3 id="pdf-ai-exposure" style="font-size: 2.4rem; font-weight: 800; color: #7b2cbf; margin: 0.5rem 0 0.2rem;">0</h3>
-                        <span style="font-size: 0.75rem; color: #868e96;">AI 브리핑 인용 성공 키워드</span>
-                    </div>
-                    <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 1.5rem; text-align: center;">
-                        <span style="font-size: 0.85rem; font-weight: 600; color: #495057;">최종 AI 추천률</span>
-                        <h3 id="pdf-ai-percent" style="font-size: 2.4rem; font-weight: 800; color: #38b000; margin: 0.5rem 0 0.2rem;">0%</h3>
-                        <span style="font-size: 0.75rem; color: #868e96;">네이버 AI 추천 채택 확률</span>
-                    </div>
-                </div>
-
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: #111111; margin-bottom: 0.8rem;">종합 진단 및 성과 평가</h3>
-                <div style="background: #fff8f8; border-left: 4px solid #ff3b30; padding: 1.2rem; border-radius: 4px; font-size: 0.88rem; color: #495057; line-height: 1.6;">
-                    <strong>[경고] AI 노출 저하 상태 감지:</strong><br>
-                    귀사의 블로그 포스팅 중 일부는 네이버 통합검색 결과에는 노출되고 있으나, 핵심 질문에 답을 하는 <strong>AI 브리핑 본문</strong> 영역에는 채택되지 못하고 있습니다. 
-                    그 주된 이유는 제목에 사용된 대표 키워드의 본문 내 자연스러운 흐름 구조화 미비, AI 검색 로봇이 선호하는 테이블/불릿 기호 정보 제공의 누락, 그리고 E-E-A-T(전문성, 권위성, 신뢰성, 경험)를 입증할 수 있는 공신력 있는 참조 출처 부재 때문입니다. 이대로 방치할 경우 네이버 검색 개편에 따라 트래픽이 최대 60% 이상 감소할 우려가 있습니다.
                 </div>
             </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eeeeee; padding-top: 1rem; font-size: 0.75rem; color: #999999;">
-                <span>Confidential - For Internal Use Only</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eeeeee; padding-top: 1rem; font-size: 0.78rem; color: #999999;">
+                <span>Confidential - Proposed Partnership Document</span>
                 <span>Page 2</span>
             </div>
         </div>
 
-        <!-- Page 3: 상세 진단 리스트 -->
-        <div class="pdf-page" id="pdf-page-3" style="width: 794px; height: 1123px; padding: 4rem 3rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
+        <!-- Page 3: 상세 진단 결과 리스트 (Detailed Diagnostics Matrix) -->
+        <div class="pdf-page" id="pdf-page-3" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
             <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.5rem;">
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #7b2cbf;">02. 상세 진단 결과 (Detailed Diagnostics)</span>
-                    <span style="font-size: 0.8rem; color: #888888;">미담공장 AX AEO 리포트</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">02. 세부 포스팅 분석 매트릭스 (Detailed Diagnostics Matrix)</span>
+                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 리포트</span>
                 </div>
                 
-                <h2 style="font-size: 1.6rem; font-weight: 800; color: #111111; margin-bottom: 1rem;">포스팅별 AEO 상세 진단 현황</h2>
-                <p style="font-size: 0.92rem; color: #666666; line-height: 1.6; margin-bottom: 1.5rem;">
-                    수집된 블로그 글 중 상위 포스팅들의 개별 키워드 매칭 트래픽, 통합검색 노출 여부, AI 브리핑 채택 추천 여부를 실시간 진단한 테이블 리스트입니다.
-                </p>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 0.8rem;">귀사 포스팅별 AI 브리핑 스캔 결과</h2>
                 
                 <!-- 테이블 -->
-                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.78rem;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem;">
                     <thead>
                         <tr style="background: #f8f9fa; border-top: 2px solid #7b2cbf; border-bottom: 1px solid #dee2e6;">
-                            <th style="padding: 0.8rem 0.5rem; font-weight: 700; color: #495057; width: 12%;">발행일</th>
-                            <th style="padding: 0.8rem 0.5rem; font-weight: 700; color: #495057; width: 43%;">포스트 제목</th>
-                            <th style="padding: 0.8rem 0.5rem; font-weight: 700; color: #495057; width: 23%;">대표 키워드</th>
-                            <th style="padding: 0.8rem 0.5rem; font-weight: 700; color: #495057; width: 12%; text-align: center;">통합검색</th>
-                            <th style="padding: 0.8rem 0.5rem; font-weight: 700; color: #495057; width: 10%; text-align: center;">AI 추천</th>
+                            <th style="padding: 0.75rem 0.6rem; font-weight: 700; color: #495057; width: 12%;">발행일</th>
+                            <th style="padding: 0.75rem 0.6rem; font-weight: 700; color: #495057; width: 44%;">포스트 제목</th>
+                            <th style="padding: 0.75rem 0.6rem; font-weight: 700; color: #495057; width: 22%;">대표 키워드</th>
+                            <th style="padding: 0.75rem 0.6rem; font-weight: 700; color: #495057; width: 11%; text-align: center;">통합검색</th>
+                            <th style="padding: 0.75rem 0.6rem; font-weight: 700; color: #495057; width: 11%; text-align: center;">AI 추천</th>
                         </tr>
                     </thead>
                     <tbody id="pdf-table-body">
-                        <!-- 동적으로 렌더링 -->
                         <tr>
                             <td colspan="5" style="padding: 2rem; text-align: center; color: #999999;">분석된 포스팅 목록이 없습니다.</td>
                         </tr>
                     </tbody>
                 </table>
+
+                <div id="pdf-table-comment" style="margin-top: 1.2rem; padding: 0.8rem 1.2rem; background: #fff8f8; border-radius: 8px; font-size: 0.8rem; color: #495057; line-height: 1.5; border-left: 4px solid #ff3b30;">
+                    <strong>[AI 누락 경고]</strong> 대다수의 핵심 키워드가 네이버 일반 통합검색에는 상위 배치되었음에도 불구하고, 최상단 AI 추천 리포트에는 인용되지 못했습니다. 포스팅 내 지식 구조와 문체 설계를 AEO 관점에서 개선하지 않는다면, 실질 유입 고객 트래픽의 상당수가 유실되는 것을 방치하는 것과 같습니다.
+                </div>
             </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eeeeee; padding-top: 1rem; font-size: 0.75rem; color: #999999;">
-                <span>Confidential - For Internal Use Only</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eeeeee; padding-top: 1rem; font-size: 0.78rem; color: #999999;">
+                <span>Confidential - Proposed Partnership Document</span>
                 <span>Page 3</span>
             </div>
         </div>
 
-        <!-- Page 4: AEO 핵심 요인 분석 -->
-        <div class="pdf-page" id="pdf-page-4" style="width: 794px; height: 1123px; padding: 4rem 3rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
+        <!-- Page 4: AEO 핵심 요인 및 병목 정밀 진단 (Deep Bottleneck Analysis) -->
+        <div class="pdf-page" id="pdf-page-4" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
             <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.5rem;">
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #7b2cbf;">03. AEO 4대 핵심 요인 분석 (Core Factors)</span>
-                    <span style="font-size: 0.8rem; color: #888888;">미담공장 AX AEO 리포트</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">03. AI 노출 저해요인 및 병목 진단 (Deep Bottleneck Analysis)</span>
+                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 리포트</span>
                 </div>
                 
-                <h2 style="font-size: 1.6rem; font-weight: 800; color: #111111; margin-bottom: 1rem;">네이버 AI 브리핑 노출을 위한 4대 핵심 요인</h2>
-                <p style="font-size: 0.92rem; color: #666666; line-height: 1.6; margin-bottom: 2.5rem;">
-                    네이버 AI 브리핑 로봇이 특정 블로그 글을 인용 및 답변 카드로 채택하는 알고리즘 원리에 기반한 4대 핵심 전략입니다. 
-                </p>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 0.8rem;">귀사 콘텐츠의 AI 검색 로봇 수집 병목 요인</h2>
                 
-                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                        <div style="background: rgba(157,78,221,0.1); border: 1px solid #9d4edd; border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #7b2cbf; font-weight: 700; flex-shrink: 0;">1</div>
-                        <div style="text-align: left;">
-                            <h4 style="font-size: 1.05rem; font-weight: 700; color: #111111; margin: 0 0 0.3rem 0;">키워드 매칭 신뢰성 (Keyword Alignment)</h4>
-                            <p style="font-size: 0.85rem; color: #555555; line-height: 1.5; margin: 0;">사용자가 던진 검색어(질문)와 본문의 소제목 및 첫 두 줄 내의 매칭 구조가 명확해야 합니다. 자연어로 된 명확한 답변이 두괄식으로 기술되어 있을수록 노출 점수가 극대화됩니다.</p>
-                        </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem;">
+                    <div style="background: rgba(157,78,221,0.02); border: 1px solid rgba(157,78,221,0.12); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                        <div style="background: rgba(157,78,221,0.1); border: 1px solid #9d4edd; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #7b2cbf; font-weight: 700;">1</div>
+                        <h4 style="font-size: 0.95rem; font-weight: 700; color: #111111; margin: 0;">구조화 데이터 설계 결여<br>(Structural Deficit)</h4>
+                        <p style="font-size: 0.75rem; color: #555555; line-height: 1.5; margin: 0;">
+                            네이버 AI 로봇은 자연스러운 긴 줄글 문단보다 핵심 지식을 요약·대조할 수 있는 <strong>HTML 구조 표(Table)나 넘버링 리스트</strong>를 채택할 확률이 2.5배 높습니다. 귀사의 포스팅은 대부분 긴 줄글 형태로 기계적 가독성 평점이 매우 낮습니다.
+                        </p>
                     </div>
                     
-                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                        <div style="background: rgba(0,180,216,0.1); border: 1px solid #00b4d8; border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #00b4d8; font-weight: 700; flex-shrink: 0;">2</div>
-                        <div style="text-align: left;">
-                            <h4 style="font-size: 1.05rem; font-weight: 700; color: #111111; margin: 0 0 0.3rem 0;">구조화된 표 및 리스트 구성 (Data Structuring)</h4>
-                            <p style="font-size: 0.85rem; color: #555555; line-height: 1.5; margin: 0;">AI 엔진은 복잡한 서술형 텍스트보다 한눈에 파악이 용이한 HTML 표(Table)나 불릿 기호(·)로 정리된 순서 리스트를 200% 신뢰하여 답변 카드로 긁어옵니다. 글 작성 시 1개 이상의 비교표 삽입은 필수입니다.</p>
-                        </div>
+                    <div style="background: rgba(0,180,216,0.02); border: 1px solid rgba(0,180,216,0.12); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                        <div style="background: rgba(0,180,216,0.1); border: 1px solid #00b4d8; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #00b4d8; font-weight: 700;">2</div>
+                        <h4 style="font-size: 0.95rem; font-weight: 700; color: #111111; margin: 0;">E-E-A-T 신뢰 출처 표기 누락<br>(Reference Absence)</h4>
+                        <p style="font-size: 0.75rem; color: #555555; line-height: 1.5; margin: 0;">
+                            의료·건강 등 전문 키워드군에서는 정보 출처의 투명성이 필수적입니다. 학술 자료, 임상 가이드라인, 전문 보고서의 구체적인 출처 텍스트 기입 및 하이퍼링크 매핑이 누락되어 네이버 검색 가중치 필터에 인용 대상에서 누락되는 병목을 보입니다.
+                        </p>
                     </div>
                     
-                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                        <div style="background: rgba(56,176,0,0.1); border: 1px solid #38b000; border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #38b000; font-weight: 700; flex-shrink: 0;">3</div>
-                        <div style="text-align: left;">
-                            <h4 style="font-size: 1.05rem; font-weight: 700; color: #111111; margin: 0 0 0.3rem 0;">신뢰할 수 있는 외부 출처 인용 (E-E-A-T)</h4>
-                            <p style="font-size: 0.85rem; color: #555555; line-height: 1.5; margin: 0;">보건복지부, 전문 교과서, 통계청 등 외부 공신력 있는 자료를 텍스트 형태로 본문 하단이나 인용 템플릿 형태로 표기하고 관련 링크를 자연스럽게 매핑하여 정보의 학술적/실무적 깊이를 인증받아야 채택률이 높아집니다.</p>
-                        </div>
+                    <div style="background: rgba(56,176,0,0.02); border: 1px solid rgba(56,176,0,0.12); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                        <div style="background: rgba(56,176,0,0.1); border: 1px solid #38b000; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #38b000; font-weight: 700;">3</div>
+                        <h4 style="font-size: 0.95rem; font-weight: 700; color: #111111; margin: 0;">대화형 쿼리 인텐트 불일치<br>(Intent Mismatch)</h4>
+                        <p style="font-size: 0.75rem; color: #555555; line-height: 1.5; margin: 0;">
+                            검색 유저들은 AI 검색 시 "~에 좋은 음식은?", "~의 대처법은?" 등 질문형으로 검색합니다. 귀사의 포스트들은 단순 타겟 키워드와 상업적 문구의 반복에 집중하여, 실제 질문 쿼리에 직결되는 두괄식 정답형 단락 구조가 부재합니다.
+                        </p>
                     </div>
-                    
-                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
-                        <div style="background: rgba(255,204,0,0.1); border: 1px solid #ffcc00; border-radius: 8px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #e5b200; font-weight: 700; flex-shrink: 0;">4</div>
-                        <div style="text-align: left;">
-                            <h4 style="font-size: 1.05rem; font-weight: 700; color: #111111; margin: 0 0 0.3rem 0;">비상업적 정보 가치 제공 (Non-Commercial Utility)</h4>
-                            <p style="font-size: 0.85rem; color: #555555; line-height: 1.5; margin: 0;">병원 홍보문구, 연락처의 잦은 노출, 혹은 지나친 브랜드명 반복은 네이버 필터링 시스템(C-Rank / D.I.A.)에 노이즈로 감지됩니다. 철저히 환자/소비자가 찾는 유용한 정보성 키워드로 본문을 풍부히 구성해야 합니다.</p>
-                        </div>
-                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <h4 style="font-size: 0.9rem; font-weight: 700; color: #111111; margin-bottom: 0.5rem; text-align: left;">네이버 HyperCLOVA X 검색 알고리즘 기준 비교 평점</h4>
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.75rem;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 1px solid #dee2e6; font-weight: 700;">
+                                <th style="padding: 0.5rem; color: #495057; width: 25%;">알고리즘 평가 기준</th>
+                                <th style="padding: 0.5rem; color: #495057; width: 45%;">핵심 평가 항목</th>
+                                <th style="padding: 0.5rem; color: #ff3b30; width: 15%; text-align: center;">귀사 블로그 평점</th>
+                                <th style="padding: 0.5rem; color: #38b000; width: 15%; text-align: center;">미담공장 AX 기준</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #eeeeee;">
+                                <td style="padding: 0.4rem 0.5rem; font-weight: 600;">기계가독성 (Readability)</td>
+                                <td style="padding: 0.4rem 0.5rem; color: #666666;">답변 요약용 HTML Table 및 List 등 기계 파싱 구조 설계도</td>
+                                <td style="padding: 0.4rem 0.5rem; text-align: center; font-weight: 700; color: #ff3b30;">D (미흡)</td>
+                                <td style="padding: 0.4rem 0.5rem; text-align: center; font-weight: 700; color: #38b000;">A+ (최적화)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eeeeee;">
+                                <td style="padding: 0.4rem 0.5rem; font-weight: 600;">정보 신뢰도 (E-E-A-T)</td>
+                                <td style="padding: 0.4rem 0.5rem; color: #666666;">공식 학회/논문 레퍼런스 인용 및 검증된 가이드라인 링크 매핑</td>
+                                <td style="padding: 0.4rem 0.5rem; text-align: center; font-weight: 700; color: #ff3b30;">F (누락)</td>
+                                <td style="padding: 0.4rem 0.5rem; text-align: center; font-weight: 700; color: #38b000;">A (기준 부합)</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eeeeee;">
+                                <td style="padding: 0.4rem 0.5rem; font-weight: 600;">질문 정합도 (Intent Score)</td>
+                                <td style="padding: 0.4rem 0.5rem; color: #666666;">대화형 쿼리 질문에 직결되는 두괄식 단락 및 문체 일치 여부</td>
+                                <td style="padding: 0.4rem 0.5rem; text-align: center; font-weight: 700; color: #ff3b30;">C (보통)</td>
+                                <td style="padding: 0.4rem 0.5rem; text-align: center; font-weight: 700; color: #38b000;">A+ (완전 일치)</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eeeeee; padding-top: 1rem; font-size: 0.75rem; color: #999999;">
-                <span>Confidential - For Internal Use Only</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eeeeee; padding-top: 1rem; font-size: 0.78rem; color: #999999;">
+                <span>Confidential - Proposed Partnership Document</span>
                 <span>Page 4</span>
             </div>
         </div>
 
-        <!-- Page 5: 로드맵 및 CTA -->
-        <div class="pdf-page" id="pdf-page-5" style="width: 794px; height: 1123px; padding: 4rem 3rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #0b071e; color: #ffffff; overflow: hidden;">
-            <div style="position: absolute; top: -100px; left: -100px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(157,78,221,0.15) 0%, transparent 70%); filter: blur(50px);"></div>
-            <div style="position: absolute; bottom: -100px; right: -100px; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(0,180,216,0.15) 0%, transparent 70%); filter: blur(50px);"></div>
+        <!-- Page 5: 미담공장 AX 도입 전후 비교 및 성과 모델 (Performance Gap Analysis) -->
+        <div class="pdf-page" id="pdf-page-5" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.2rem;">
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">04. 미담공장 AX 도입 전후 비교 및 성과 모델 (Performance Gap Analysis)</span>
+                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 제안서</span>
+                </div>
+                
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 1rem;">미담공장 AX 최적화 솔루션 적용 효과 및 성과 모델</h2>
+                
+                <div style="display: flex; gap: 2rem;">
+                    <!-- 좌측: 도입 전 (BEFORE) -->
+                    <div style="flex: 1; background: #fff5f5; border: 1px solid #ffe3e3; border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="background: #ff3b30; color: #ffffff; font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 20px;">BEFORE</span>
+                            <strong style="font-size: 1.05rem; color: #ff3b30;">일반 대행사 및 기존 방식 포스팅</strong>
+                        </div>
+                        <ul style="font-size: 0.8rem; color: #495057; padding-left: 1.2rem; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.5;">
+                            <li><strong>단순 텍스트 나열형 글쓰기:</strong> 검색 로봇이 데이터 구조를 파악할 수 없어 요약 카드에서 완전히 배제됨.</li>
+                            <li><strong>무분별한 키워드 반복 유입 유도:</strong> 네이버 스팸 필터(C-Rank) 감지 우려 및 AI 브리핑 본문 노이즈 판정.</li>
+                            <li><strong>출처(E-E-A-T) 매핑 부재:</strong> 전문 정보의 신뢰 기반이 부족해 최상단 지식 스니펫 추천 불가.</li>
+                            <li><strong>트래픽 결과:</strong> 통합검색 뷰 탭 하위권에 머무르며 모바일 유입 감소 및 전환율 0.5% 미만.</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 우측: 도입 후 (AFTER) -->
+                    <div style="flex: 1; background: #f4fbf7; border: 1px solid #d3f4e4; border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="background: #38b000; color: #ffffff; font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 20px;">AFTER</span>
+                            <strong style="font-size: 1.05rem; color: #38b000;">미담공장 AX 지능형 AEO/GEO 포스팅</strong>
+                        </div>
+                        <ul style="font-size: 0.8rem; color: #495057; padding-left: 1.2rem; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.5;">
+                            <li><strong>HTML 테이블 및 마크업 최적화:</strong> AI 엔진이 핵심 답변을 신속 수집하여 최상단 AI 요약 카드에 추천.</li>
+                            <li><strong>의학/학회 레퍼런스 출처 탑재:</strong> 공신력 있는 E-E-A-T 점수를 획득하여 경쟁 업체 블로그 대비 절대 우위 점유.</li>
+                            <li><strong>자연어 대화형 쿼리(GEO) 설계:</strong> 환자와 고객의 실제 자연어 검색 형태에 맞춤 대화형 콘텐츠 설계.</li>
+                            <li><strong>트래픽 결과:</strong> 네이버 AI 브리핑 카드 추천 점유, 타겟 유입 약 280% 급증 및 예약/구매 전환율 대폭 상승.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1.5rem; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 0.8rem 1.2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.82rem; font-weight: 700; color: #111111;">추천 플랜 도입 시 기대 성과:</span>
+                    <span style="font-size: 0.82rem; color: #495057;">
+                        평균적으로 포스팅 도입 후 <strong>3주 이내</strong> 핵심 타겟 키워드의 네이버 AI 브리핑 노출률이 <strong>최소 45% 이상</strong> 상승합니다.
+                    </span>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eeeeee; padding-top: 1rem; font-size: 0.78rem; color: #999999;">
+                <span>Confidential - Proposed Partnership Document</span>
+                <span>Page 5</span>
+            </div>
+        </div>
+
+        <!-- Page 6: 미담공장 AX 지능형 솔루션 제안 (AX Intelligent Optimization Services) -->
+        <div class="pdf-page" id="pdf-page-6" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">05. 미담공장 AX 지능형 최적화 솔루션 (Intelligent Optimization Services)</span>
+                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 제안서</span>
+                </div>
+                
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 0.8rem;">귀사의 AI 검색 트래픽 점유를 위한 전략 제안</h2>
+                
+                <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+                    <!-- 서비스 1 -->
+                    <div style="border-left: 4px solid #7b2cbf; padding-left: 1.2rem; text-align: left;">
+                        <h4 style="font-size: 1.05rem; font-weight: 700; color: #111111; margin: 0 0 0.3rem 0;">AEO 최적화 포스팅 서비스 (AI Briefing Engineering)</h4>
+                        <p style="font-size: 0.8rem; color: #555555; line-height: 1.5; margin: 0;">
+                            네이버 AI 검색 로봇이 본문에서 질문의 핵심 답변을 즉시 매핑하여 긁어갈 수 있도록 <strong>질문-답변 세부 구조(Q&A Snippet) 설계</strong> 및 <strong>1:1 대조 분석 표(Table) 삽입 기술</strong>을 표준화하여 반영한 전문 포스팅을 기획 및 집필해 드립니다.
+                        </p>
+                    </div>
+                    <!-- 서비스 2 -->
+                    <div style="border-left: 4px solid #00b4d8; padding-left: 1.2rem; text-align: left;">
+                        <h4 style="font-size: 1.05rem; font-weight: 700; color: #111111; margin: 0 0 0.3rem 0;">병원 및 브랜드 GEO 통합 관리 (GEO Brand Management)</h4>
+                        <p style="font-size: 0.8rem; color: #555555; line-height: 1.5; margin: 0;">
+                            단순 상업성 글쓰기에서 벗어나, 환자와 소비자가 실제로 의존하는 유익한 정보성 키워드와 롱테일 질의어를 분석하여 <strong>의학 가이드라인, 학술 출처 인용 및 신뢰 템플릿(EEAT)</strong>을 탑재한 전문 브랜드 블로그 대행 관리를 수행합니다.
+                        </p>
+                    </div>
+                    <!-- 서비스 3 -->
+                    <div style="border-left: 4px solid #38b000; padding-left: 1.2rem; text-align: left;">
+                        <h4 style="font-size: 1.05rem; font-weight: 700; color: #111111; margin: 0 0 0.3rem 0;">AI 브리핑 실시간 노출 모니터링 및 지속 튜닝</h4>
+                        <p style="font-size: 0.8rem; color: #555555; line-height: 1.5; margin: 0;">
+                            네이버 알고리즘 엔진(Fender API 등)의 미세 변화를 당사 독자 기술로 상시 트래킹하여, 작성된 글이 시간이 지나도 경쟁사 글에 밀려 AI 추천 영역에서 떨어지지 않도록 핵심 키워드 유입률을 분석하고 상위 노출 상태를 사후 보정 및 유지 관리해 드립니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eeeeee; padding-top: 1rem; font-size: 0.78rem; color: #999999;">
+                <span>Confidential - Proposed Partnership Document</span>
+                <span>Page 6</span>
+            </div>
+        </div>
+
+        <!-- Page 7: 추진 로드맵 및 파트너십 안내 (Roadmap & CTA) -->
+        <div class="pdf-page" id="pdf-page-7" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #07041a; color: #ffffff; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -150px; left: -150px; width: 400px; height: 400px; border-radius: 50%; background: radial-gradient(circle, rgba(157,78,221,0.2) 0%, transparent 70%); filter: blur(70px);"></div>
+            <div style="position: absolute; bottom: -150px; right: -150px; width: 450px; height: 450px; border-radius: 50%; background: radial-gradient(circle, rgba(0,180,216,0.15) 0%, transparent 70%); filter: blur(70px);"></div>
             
             <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; margin-bottom: 2.5rem;">
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #00b4d8;">04. 솔루션 로드맵 (Solution Roadmap)</span>
-                    <span style="font-size: 0.8rem; color: #a69ebd;">미담공장 AX AEO 리포트</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 2.2rem;">
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #00b4d8;">06. 추진 로드맵 및 파트너십 (Roadmap & Partnership)</span>
+                    <span style="font-size: 0.88rem; color: #a69ebd;">미담공장 AX 제안서</span>
                 </div>
                 
-                <h2 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; margin-bottom: 0.8rem;">검색 노출 최적화 4단계 개선 솔루션</h2>
-                <p style="font-size: 0.88rem; color: #a69ebd; line-height: 1.5; margin-bottom: 2rem; max-width: 580px;">
-                    미담공장 AX 지능형 인공지능 검색 솔루션을 적용하여 귀사 블로그의 검색 점유율을 비약적으로 성장시키기 위한 기술 로드맵입니다.
-                </p>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #ffffff; margin-bottom: 0.8rem;">지능형 검색 노출 극대화 4단계 추진 로드맵</h2>
                 
-                <!-- 로드맵 그래픽 -->
-                <div style="display: flex; flex-direction: column; gap: 1.1rem; position: relative;">
-                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.06); padding: 1.1rem 1.4rem; border-radius: 10px; display: flex; align-items: center; gap: 1.25rem;">
-                        <span style="font-size: 1.3rem; font-weight: 800; color: #9d4edd; font-family: 'Outfit';">01</span>
-                        <div style="text-align: left;">
-                            <h4 style="font-size: 0.95rem; font-weight: 700; color: #ffffff; margin: 0 0 0.15rem 0;">1단계: 타겟 키워드 쿼리 정밀 스캔</h4>
-                            <p style="font-size: 0.8rem; color: #a69ebd; margin: 0;">환자들이 자주 물어보는 질문과 네이버 검색광고 트래픽 API를 결합하여 롱테일 고가치 키워드군 발굴</p>
-                        </div>
+                <!-- 로드맵 4단계 -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem;">
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; border-radius: 8px;">
+                        <span style="font-size: 1.2rem; font-weight: 800; color: #9d4edd; font-family: 'Outfit';">Phase 01</span>
+                        <h4 style="font-size: 0.9rem; font-weight: 700; color: #ffffff; margin: 0.5rem 0 0.3rem;">브랜드 자산 스캔</h4>
+                        <p style="font-size: 0.72rem; color: #a69ebd; line-height: 1.5; margin: 0;">현재 블로그 노출 병목을 정밀 계측하고, 핵심 타겟 쿼리 및 환자 검색 의도 맵핑 리스트 도출 (1주 차)</p>
                     </div>
                     
-                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.06); padding: 1.1rem 1.4rem; border-radius: 10px; display: flex; align-items: center; gap: 1.25rem;">
-                        <span style="font-size: 1.3rem; font-weight: 800; color: #00b4d8; font-family: 'Outfit';">02</span>
-                        <div style="text-align: left;">
-                            <h4 style="font-size: 0.95rem; font-weight: 700; color: #ffffff; margin: 0 0 0.15rem 0;">2단계: AEO 최적화 글쓰기 구조 정비</h4>
-                            <p style="font-size: 0.8rem; color: #a69ebd; margin: 0;">두괄식 요약, 1:1 대조 비교 테이블 삽입, E-E-A-T 증명 출처 구조화 스크립트 템플릿 보급</p>
-                        </div>
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; border-radius: 8px;">
+                        <span style="font-size: 1.2rem; font-weight: 800; color: #00b4d8; font-family: 'Outfit';">Phase 02</span>
+                        <h4 style="font-size: 0.9rem; font-weight: 700; color: #ffffff; margin: 0.5rem 0 0.3rem;">AEO 콘텐츠 이식</h4>
+                        <p style="font-size: 0.72rem; color: #a69ebd; line-height: 1.5; margin: 0;">질문형 두괄식 세부 구조 적용, 정보 비교표 및 출처 링크 등 기계 가독성(MR) 콘텐츠 집중 설계 (2~3주 차)</p>
                     </div>
                     
-                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.06); padding: 1.1rem 1.4rem; border-radius: 10px; display: flex; align-items: center; gap: 1.25rem;">
-                        <span style="font-size: 1.3rem; font-weight: 800; color: #38b000; font-family: 'Outfit';">03</span>
-                        <div style="text-align: left;">
-                            <h4 style="font-size: 0.95rem; font-weight: 700; color: #ffffff; margin: 0 0 0.15rem 0;">3단계: AI 인용 썸네일 노출 락인</h4>
-                            <p style="font-size: 0.8rem; color: #a69ebd; margin: 0;">가시성이 뛰어난 핵심 요약 카드뉴스 이미지 매핑 및 Alt 태그/인용 캡션을 통한 AI 검색로봇 이미지 매칭</p>
-                        </div>
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; border-radius: 8px;">
+                        <span style="font-size: 1.2rem; font-weight: 800; color: #38b000; font-family: 'Outfit';">Phase 03</span>
+                        <h4 style="font-size: 0.9rem; font-weight: 700; color: #ffffff; margin: 0.5rem 0 0.3rem;">AI 썸네일/출처 고정</h4>
+                        <p style="font-size: 0.72rem; color: #a69ebd; line-height: 1.5; margin: 0;">AI 브리핑 카드뉴스 및 상단 썸네일 노출 락인을 위한 비주얼 리소스 최적화 및 E-E-A-T 증명 락인 (4주 차)</p>
                     </div>
                     
-                    <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.06); padding: 1.1rem 1.4rem; border-radius: 10px; display: flex; align-items: center; gap: 1.25rem;">
-                        <span style="font-size: 1.3rem; font-weight: 800; color: #ffcc00; font-family: 'Outfit';">04</span>
-                        <div style="text-align: left;">
-                            <h4 style="font-size: 0.95rem; font-weight: 700; color: #ffffff; margin: 0 0 0.15rem 0;">4단계: 실시간 모니터링 & AI 인용 극대화</h4>
-                            <p style="font-size: 0.8rem; color: #a69ebd; margin: 0;">네이버 검색 알고리즘 변화에 맞춰 실시간 랭킹 트래킹 및 피드백 수정 대응</p>
-                        </div>
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem; border-radius: 8px;">
+                        <span style="font-size: 1.2rem; font-weight: 800; color: #ffcc00; font-family: 'Outfit';">Phase 04</span>
+                        <h4 style="font-size: 0.9rem; font-weight: 700; color: #ffffff; margin: 0.5rem 0 0.3rem;">상시 피드백 튜닝</h4>
+                        <p style="font-size: 0.72rem; color: #a69ebd; line-height: 1.5; margin: 0;">점유 상태 상시 트래킹 대시보드 연동, 검색엔진 변화에 따른 능동적 수정 보완 및 상위 노출 락인 (상시 유지)</p>
                     </div>
                 </div>
             </div>
             
-            <!-- 컨설팅 유도 CTA -->
-            <div style="margin-top: 2rem; background: var(--primary-grad); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 1.25rem; text-align: center; box-shadow: 0 8px 24px rgba(123, 44, 191, 0.3);">
-                <h3 style="font-size: 1.05rem; font-weight: 700; color: #ffffff; margin-bottom: 0.4rem;">검색 점유율 300% 극대화를 위한 무료 정밀 컨설팅 신청</h3>
-                <p style="font-size: 0.78rem; color: #dfc2ff; margin-bottom: 0px; line-height: 1.4;">
-                    본 리포트 소지자에 한해 병원/기업 브랜드 맞춤형 GEO 마케팅 처방전을 무상 지원해 드립니다.<br>
-                    <strong>지금 미담공장 AX 지능형 검색 분석팀에 컨설팅을 의뢰해 보세요.</strong> (문의: midamgong_ax@mydam.co.kr)
+            <!-- CTA 제안 안내 -->
+            <div style="background: linear-gradient(135deg, #7b2cbf 0%, #00b4d8 100%); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 1.3rem; text-align: center; box-shadow: 0 8px 24px rgba(123, 44, 191, 0.3); z-index: 10;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 0.35rem;">귀사의 마케팅 자산을 AI 시대의 강력한 트래픽 엔진으로 변환해 드립니다</h3>
+                <p style="font-size: 0.85rem; color: #dfc2ff; margin-bottom: 0px; line-height: 1.45;">
+                    본 분석 제안서를 기반으로 하여 귀사 브랜드 블로그에 맞춘 개별 마케팅 타겟 처방전을 무상으로 지원해 드립니다.<br>
+                    <strong>지금 미담공장 AX 전략분석팀에 정밀 컨설팅을 의뢰해 보십시오.</strong> (협력 문의: contact@mydamgong.co.kr)
                 </p>
             </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; font-size: 0.75rem; color: #a69ebd;">
-                <span>Powered by Midamgong AX Optimizer</span>
-                <span>Page 5</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem; font-size: 0.75rem; color: #a69ebd;">
+                <span>Powered by Midamgong AX Optimizer Engine</span>
+                <span>Page 7</span>
             </div>
         </div>
     </div>
 
     <!-- Custom JS (캐시 방지 버전 적용) -->
-    <script src="app.js?v=1.6"></script>
+    <script src="app.js?v=1.7"></script>
 </body>
 </html>

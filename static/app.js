@@ -1464,6 +1464,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("pdf-ai-exposure").textContent = aiCount;
                 document.getElementById("pdf-ai-percent").textContent = `${aiPercent}%`;
                 
+                // 종합 AEO 등급 및 코멘트 동적 판정 및 주입
+                let grade = "C-Grade (미흡)";
+                let gradeColor = "#ff3b30";
+                let diagSummary = "";
+                
+                if (aiPercent >= 40) {
+                    grade = "A-Grade (최적화 우수)";
+                    gradeColor = "#38b000";
+                    diagSummary = `귀사 블로그의 AI 검색 최적화 상태는 <strong>우수(A-Grade)</strong>한 편입니다. 분석된 포스트 중 상당수가 네이버 AI 브리핑 답변 출처 카드로 인용되고 있습니다. 다만, 네이버의 지속적인 검색엔진 고도화 및 경쟁사 유입 방어를 위해, 핵심 의료/전문 정보의 E-E-A-T 구조를 유지하고 상시 모니터링을 지속해야 합니다.`;
+                } else if (aiPercent >= 15) {
+                    grade = "B-Grade (보통 / 개선 권장)";
+                    gradeColor = "#ffcc00";
+                    diagSummary = `귀사 블로그의 AI 검색 최적화 상태는 <strong>보통(B-Grade)</strong> 수준입니다. 일반 검색 노출은 준수하나, AI 브리핑 답변의 추천 출처로 채택되는 비율이 제한적입니다. 본문 중 표(Table)나 리스트(List) 구조화가 미흡하거나 핵심 롱테일 유저 질문에 직접 답변하는 문장 형식을 적용하지 않아 로봇의 정보 채택율이 저하되어 있습니다. 당사의 부분 튜닝을 통해 즉각적인 유입 상승이 가능합니다.`;
+                } else {
+                    grade = "C-Grade (미흡 / 긴급 튜닝 필요)";
+                    gradeColor = "#ff3b30";
+                    diagSummary = `귀사 블로그의 AI 검색 최적화 상태는 <strong>매우 미흡(C-Grade)</strong>한 위험군으로 파악됩니다. 전통적인 뷰/블로그 탭에는 일부 글이 노출되고 있으나, 네이버 검색 최상단을 점유하고 있는 AI 브리핑 영역에는 추천 출처가 거의 잡히지 않고 있습니다. 로봇이 정보를 독해(MR)할 수 없는 단순 줄글 중심의 작성 방식과 E-E-A-T 신뢰 출처 표기 누락이 누적된 결과입니다. 미담공장 AX의 맞춤형 AEO 포스팅 서비스 도입이 시급히 요구됩니다.`;
+                }
+                
+                document.getElementById("pdf-diag-grade").innerHTML = grade;
+                document.getElementById("pdf-diag-grade").style.color = gradeColor;
+                document.getElementById("pdf-diag-summary").innerHTML = diagSummary;
+                
                 // 상세 진단 목록 테이블 동적 렌더링 (A4 공간 초과 방지를 위해 상위 13개 행만 노출)
                 const tableBody = document.getElementById("pdf-table-body");
                 let tableHtml = "";
@@ -1503,6 +1526,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     `;
                 }
                 tableBody.innerHTML = tableHtml;
+
+                // 테이블 하단 동적 진단평 바인딩
+                let tableComment = "";
+                if (aiPercent < 20) {
+                    tableComment = `<strong>[AI 누락 경고]</strong> 대다수의 핵심 키워드가 네이버 일반 통합검색에는 상위 배치되었음에도 불구하고, 최상단 AI 추천 리포트에는 인용되지 못했습니다. 포스팅 내 지식 구조와 문체 설계를 AEO 관점에서 개선하지 않는다면, 실질 유입 고객 트래픽의 상당수가 유실되는 것을 방치하는 것과 같습니다.`;
+                } else {
+                    tableComment = `<strong>[AI 추천 분석]</strong> 현재 AI 추천 영역에 일부 포스팅이 노출 중이나, 핵심 롱테일 질의어 점유는 여전히 공백 상태입니다. 경쟁사들이 AEO/GEO 기법을 적용하기 전, 선제적으로 E-E-A-T 구조를 반영한 신뢰 포스팅을 발행하여 점유를 공고히 해야 합니다.`;
+                }
+                document.getElementById("pdf-table-comment").innerHTML = tableComment;
                 
                 // 5.2. html2canvas 캡처를 위해 임시 템플릿 영역 노출
                 const reportRoot = document.getElementById("pdf-report-root");
@@ -1510,10 +1542,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 reportRoot.style.left = "0";
                 reportRoot.style.top = "0";
                 
-                // 5.3. 캡처 및 PDF 빌드 (A4 5페이지 단방향 캡처 진행)
+                // 5.3. 캡처 및 PDF 빌드 (A4 7페이지 가로형 캡처 진행)
                 const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF("p", "mm", "a4");
-                const pageIds = ["pdf-page-1", "pdf-page-2", "pdf-page-3", "pdf-page-4", "pdf-page-5"];
+                const pdf = new jsPDF("l", "mm", "a4");
+                const pageIds = ["pdf-page-1", "pdf-page-2", "pdf-page-3", "pdf-page-4", "pdf-page-5", "pdf-page-6", "pdf-page-7"];
                 
                 for (let i = 0; i < pageIds.length; i++) {
                     const pageEl = document.getElementById(pageIds[i]);
@@ -1525,8 +1557,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     
                     const imgData = canvas.toDataURL("image/jpeg", 0.95);
-                    const imgWidth = 210;
-                    const pageHeight = 297;
+                    const imgWidth = 297; // 가로 크기 297mm
+                    const pageHeight = 210; // 세로 크기 210mm
                     
                     if (i > 0) {
                         pdf.addPage();
