@@ -2339,6 +2339,102 @@ body {
     text-decoration-color: #ffffff;
 }
 
+/* ==========================================================================
+   추가: PDF 보고서 다운로드 버튼 및 인쇄용 템플릿
+   ========================================================================== */
+.btn-pdf-download {
+    background: linear-gradient(135deg, #7209b7 0%, #3f37c9 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(114, 9, 183, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-pdf-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(114, 9, 183, 0.55), 0 0 10px rgba(0, 180, 216, 0.4);
+    border-color: var(--neon-blue);
+    background: linear-gradient(135deg, #3f37c9 0%, #4895ef 100%);
+}
+
+.btn-pdf-download:active {
+    transform: translateY(0);
+}
+
+.btn-pdf-download i {
+    font-size: 1rem;
+    color: #ff3b30;
+    text-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
+}
+
+/* AEO 상세 진단 모달 스크롤바 & 휠 고도화 */
+.modal-ai-briefing-scroll::-webkit-scrollbar,
+.modal-column-left::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-ai-briefing-scroll::-webkit-scrollbar-track,
+.modal-column-left::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+}
+
+.modal-ai-briefing-scroll::-webkit-scrollbar-thumb,
+.modal-column-left::-webkit-scrollbar-thumb {
+    background: rgba(157, 78, 221, 0.35);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modal-ai-briefing-scroll::-webkit-scrollbar-thumb:hover,
+.modal-column-left::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 78, 221, 0.6);
+    box-shadow: 0 0 8px var(--neon-purple-glow);
+}
+
+/* 화면 높이가 작은 저해상도 기기 환경에 대응한 모달 반응형 휠 개선 */
+@media (max-height: 820px) {
+    .premium-modal {
+        max-height: 95vh;
+        margin: 1rem auto;
+    }
+    .modal-body-layout {
+        max-height: 62vh;
+    }
+    .modal-table-container {
+        max-height: 180px;
+    }
+}
+
+@media (max-width: 900px) {
+    .modal-body-layout {
+        flex-direction: column;
+        overflow-y: auto;
+        max-height: 65vh;
+    }
+    .modal-column-left,
+    .modal-column-right {
+        flex: none;
+        width: 100%;
+        overflow-y: visible;
+    }
+    .modal-table-container {
+        max-height: none;
+    }
+    .modal-ai-briefing-scroll {
+        overflow-y: visible;
+        max-height: none;
+    }
+}
+
 
 
 

@@ -685,11 +685,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // 블로그 폼 전송 이벤트
     blogForm.addEventListener("submit", (e) => {
         e.preventDefault();
-        triggerBlogAnalysis();
+        triggerBlogAnalysis(false); // 새로 조회
     });
 
-    // 블로그 분석 구동기
-    async function triggerBlogAnalysis() {
+    // 블로그 분석 구동기 (isAdditional: 누적 추가 스크래핑 여부)
+    async function triggerBlogAnalysis(isAdditional = false) {
         const token = sessionStorage.getItem("mydamgong_token");
         if (!token) {
             checkAuthentication();
@@ -700,29 +700,62 @@ document.addEventListener("DOMContentLoaded", () => {
         const blogId = extractBlogId(rawVal);
         if (!blogId) return;
 
-        // 페이지 번호 초기화
-        currentPage = 1;
-
         // 사이드바 대표 정보 동기화
         document.getElementById("sidebar-blog-name").textContent = blogId;
 
+        let offset = 0;
+        let limit = 15;
+
+        if (isAdditional) {
+            offset = currentBlogPosts.length;
+            limit = parseInt(countSelect.value);
+            if (isNaN(limit)) limit = 10;
+            
+            // 게스트 등급(5420)은 누적 200개 한도 제한 적용
+            if (token === "5420" && (offset + limit) > 200) {
+                // 초과 시 경고 모달 노출 및 진행 차단
+                const upgradeModal = document.getElementById("premium-upgrade-modal");
+                if (upgradeModal) {
+                    upgradeModal.classList.remove("hide");
+                } else {
+                    alert("[게스트 제한] 누적 포스팅 수집 한도(최대 200개)를 초과할 수 없습니다. 마스터 등급으로 전환해 주세요.");
+                }
+                // 드롭다운 선택 초기화
+                countSelect.value = "15";
+                return;
+            }
+        } else {
+            // 새로 검색 시 기존 데이터 초기화
+            currentBlogPosts = [];
+            currentPage = 1;
+            activeLimit = 15;
+            countSelect.value = "15"; // 드롭다운 기본값으로 리셋
+        }
+
         blogSpinner.classList.remove("hide");
-        blogLoadingState.classList.remove("hide");
-        blogResultSection.classList.add("hide");
+        // 추가 수집일 때는 전체 로딩 서클을 띄우지 않고, 신규 행의 개별 스피너만 보이게 처리
+        if (!isAdditional) {
+            blogLoadingState.classList.remove("hide");
+            blogResultSection.classList.add("hide");
+        }
 
         try {
-            const res = await fetch(`/api/blog/posts?blog_id=${encodeURIComponent(blogId)}`);
+            const res = await fetch(`/api/blog/posts?blog_id=${encodeURIComponent(blogId)}&offset=${offset}&limit=${limit}`);
             if (!res.ok) {
                 throw new Error("블로그 글 목록을 가져올 수 없습니다. 비공개이거나 아이디가 잘못되었습니다.");
             }
 
             const posts = await res.json();
             if (posts.length === 0) {
+                if (isAdditional) {
+                    alert("더 이상 가져올 수 있는 포스팅이 없습니다.");
+                    return;
+                }
                 throw new Error("수집된 최근 포스트가 없습니다.");
             }
 
-            currentBlogPosts = posts.slice(0, activeLimit).map(p => {
-                // 대표 키워드 매핑 및 캐시화
+            // 추가 수집된 포스트 매핑
+            const newMappedPosts = posts.map(p => {
                 const kw = extractRepresentativeKeyword(p.title, p.link);
                 return {
                     title: p.title,
@@ -738,35 +771,46 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
             });
 
-            blogLoadingState.classList.add("hide");
-            blogResultSection.classList.remove("hide");
+            // 누적 덧붙이기 (Concat)
+            currentBlogPosts = currentBlogPosts.concat(newMappedPosts);
+
+            if (!isAdditional) {
+                blogLoadingState.classList.add("hide");
+                blogResultSection.classList.remove("hide");
+            }
             
-            // 1차 목록 테이블 즉시 렌더링 (로딩 모드)
+            // 테이블 렌더링 및 페이지네이션 재생성
             renderBlogTable();
 
-            // 순차적으로 병렬 분석 진단 호출 (서버 과부하 방지를 위해 순차 병렬)
-            diagnoseAllPosts(token);
+            // 추가된 인덱스 범위에 대해서만 개 개별 진단 비동기 루프 기동
+            const startIndex = offset;
+            const endIndex = currentBlogPosts.length;
+            
+            diagnoseRangePosts(startIndex, endIndex, token);
 
         } catch(err) {
             alert(err.message || "블로그 조회 실패");
-            blogLoadingState.classList.add("hide");
+            if (!isAdditional) {
+                blogLoadingState.classList.add("hide");
+            }
         } finally {
             blogSpinner.classList.add("hide");
         }
     }
 
-    // 개별 행 진단 호출 루프
-    async function diagnoseAllPosts(token) {
-        // 병렬 요청 최대 3개씩 청킹하여 안정적 크롤링 진행
+    // 특정 범위의 포스팅만 순차 진단하는 루프
+    async function diagnoseRangePosts(start, end, token) {
+        const targetSlice = currentBlogPosts.slice(start, end);
         const batchSize = 3;
-        for (let i = 0; i < currentBlogPosts.length; i += batchSize) {
-            const batch = currentBlogPosts.slice(i, i + batchSize);
+        
+        for (let i = 0; i < targetSlice.length; i += batchSize) {
+            const batch = targetSlice.slice(i, i + batchSize);
             const promises = batch.map((post, idx) => {
-                const actualIdx = i + idx;
+                const actualIdx = start + i + idx;
                 return diagnoseSinglePost(post, actualIdx, token);
             });
             await Promise.all(promises);
-            // 각 배치 완료 후 요약 통계 실시간 업데이트
+            // 실시간 통계 업데이트
             calculateBlogStats();
         }
     }
@@ -1359,21 +1403,178 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 4. 조회 개수 필터 드롭다운 체인지 바인딩
+    // 4. 조회 개수 필터 드롭다운 체인지 바인딩 (누적형 이전 글 수집 분기)
     if (countSelect) {
         countSelect.addEventListener("change", () => {
-            activeLimit = parseInt(countSelect.value);
-            
-            // 만약 이미 블로그 검색창에 값이 입력되어 있다면, 자동으로 재수집/재진단 시작
+            const val = countSelect.value;
             const rawVal = blogInput.value.trim();
             const blogId = extractBlogId(rawVal);
-            if (blogId) {
-                triggerBlogAnalysis();
+            if (!blogId) return;
+
+            if (val === "15") {
+                // '기본 15개 수집'일 때는 처음부터 다시 15개 수집
+                triggerBlogAnalysis(false);
+            } else {
+                // '+10', '+20', '+30' 수집 시 기존 포스트 데이터 보존 후 덧붙여 스크래핑
+                if (currentBlogPosts.length === 0) {
+                    triggerBlogAnalysis(false);
+                } else {
+                    triggerBlogAnalysis(true);
+                }
             }
         });
     }
 
-    // 5. AEO 상세 분석 모달 닫기 바인딩
+    // 5. A4 규격 프리미엄 5페이지 로컬 PDF 보고서 다운로드 연동
+    const btnPdfDownload = document.getElementById("btn-pdf-download");
+    if (btnPdfDownload) {
+        btnPdfDownload.addEventListener("click", async () => {
+            if (currentBlogPosts.length === 0) {
+                alert("진단된 블로그 데이터가 없습니다. 먼저 글 수집 및 진단을 진행해 주세요.");
+                return;
+            }
+            
+            // 버튼 상태 로딩 모드로 비활성화
+            btnPdfDownload.disabled = true;
+            const originalContent = btnPdfDownload.innerHTML;
+            btnPdfDownload.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>PDF 생성 중...</span>`;
+            
+            try {
+                // 5.1. PDF 템플릿에 실시간 대시보드 데이터 바인딩
+                const blogIdVal = document.getElementById("sidebar-blog-name").textContent || "Naver Blog";
+                document.getElementById("pdf-blog-id").textContent = blogIdVal;
+                
+                const today = new Date();
+                const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
+                document.getElementById("pdf-report-date").textContent = dateStr;
+                
+                const total = currentBlogPosts.length;
+                let searchCount = 0;
+                let aiCount = 0;
+                currentBlogPosts.forEach(p => {
+                    if (p.exposure === "O") searchCount++;
+                    if (p.ai_status === "추천") aiCount++;
+                });
+                const searchPercent = total > 0 ? Math.round((searchCount / total) * 100) : 0;
+                const aiPercent = total > 0 ? Math.round((aiCount / total) * 100) : 0;
+                
+                document.getElementById("pdf-total-posts").textContent = total;
+                document.getElementById("pdf-search-exposure").textContent = `${searchPercent}%`;
+                document.getElementById("pdf-search-count-text").textContent = `${searchCount}/${total}개 노출 중`;
+                document.getElementById("pdf-ai-exposure").textContent = aiCount;
+                document.getElementById("pdf-ai-percent").textContent = `${aiPercent}%`;
+                
+                // 상세 진단 목록 테이블 동적 렌더링 (A4 공간 초과 방지를 위해 상위 13개 행만 노출)
+                const tableBody = document.getElementById("pdf-table-body");
+                let tableHtml = "";
+                const displayPosts = currentBlogPosts.slice(0, 13);
+                
+                displayPosts.forEach(p => {
+                    const cleanTitle = p.title.length > 28 ? p.title.slice(0, 28) + "..." : p.title;
+                    const expHtml = p.exposure === "O" 
+                        ? `<span style="color:#00b4d8; font-weight:700;">O</span>` 
+                        : `<span style="color:#ff3b30; font-weight:700;">X</span>`;
+                        
+                    let aiHtml = `<span style="color:#868e96;">-</span>`;
+                    if (p.ai_status === "추천") {
+                        aiHtml = `<span style="color:#38b000; font-weight:700;">추천</span>`;
+                    } else if (p.ai_status === "미추천") {
+                        aiHtml = `<span style="color:#ffcc00; font-weight:700;">미추천</span>`;
+                    }
+                    
+                    tableHtml += `
+                        <tr style="border-bottom: 1px solid #dee2e6; height: 35px;">
+                            <td style="padding: 0.5rem; color: #495057; text-align: left;">${p.pub_date || "-"}</td>
+                            <td style="padding: 0.5rem; font-weight: 500; color: #212529; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;">${cleanTitle}</td>
+                            <td style="padding: 0.5rem; font-weight: 600; color: #7b2cbf; text-align: left;">${p.keyword}</td>
+                            <td style="padding: 0.5rem; text-align: center;">${expHtml}</td>
+                            <td style="padding: 0.5rem; text-align: center;">${aiHtml}</td>
+                        </tr>
+                    `;
+                });
+                
+                if (total > 13) {
+                    tableHtml += `
+                        <tr>
+                            <td colspan="5" style="padding: 0.6rem; text-align: center; color: #868e96; font-style: italic; background: #f8f9fa;">
+                                * 총 ${total}개 진단 포스팅 중 상위 13개 포스팅이 요약 출력되었습니다.
+                            </td>
+                        </tr>
+                    `;
+                }
+                tableBody.innerHTML = tableHtml;
+                
+                // 5.2. html2canvas 캡처를 위해 임시 템플릿 영역 노출
+                const reportRoot = document.getElementById("pdf-report-root");
+                reportRoot.style.position = "static";
+                reportRoot.style.left = "0";
+                reportRoot.style.top = "0";
+                
+                // 5.3. 캡처 및 PDF 빌드 (A4 5페이지 단방향 캡처 진행)
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF("p", "mm", "a4");
+                const pageIds = ["pdf-page-1", "pdf-page-2", "pdf-page-3", "pdf-page-4", "pdf-page-5"];
+                
+                for (let i = 0; i < pageIds.length; i++) {
+                    const pageEl = document.getElementById(pageIds[i]);
+                    const canvas = await html2canvas(pageEl, {
+                        scale: 2, // 인쇄 화질 고해상도 최적화
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false
+                    });
+                    
+                    const imgData = canvas.toDataURL("image/jpeg", 0.95);
+                    const imgWidth = 210;
+                    const pageHeight = 297;
+                    
+                    if (i > 0) {
+                        pdf.addPage();
+                    }
+                    pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, pageHeight);
+                }
+                
+                // 5.4. 로컬 브라우저 즉각 다운로드 (영문 고정 파일명 약속)
+                pdf.save("geo_aeo_blog_report.pdf");
+                
+                // 5.5. 템플릿 숨김 복원
+                reportRoot.style.position = "absolute";
+                reportRoot.style.left = "-9999px";
+                reportRoot.style.top = "-9999px";
+                
+            } catch(err) {
+                console.error("PDF 생성 중 예외 발생", err);
+                alert("PDF 보고서를 내보내지 못했습니다: " + err.message);
+            } finally {
+                btnPdfDownload.disabled = false;
+                btnPdfDownload.innerHTML = originalContent;
+            }
+        });
+    }
+
+    // 6. 마스터 회원 업그레이드 유도 모달 제어 이벤트
+    const premiumUpgradeModal = document.getElementById("premium-upgrade-modal");
+    const btnUpgradeClose = document.getElementById("btn-upgrade-close");
+    const btnUpgradeAction = document.getElementById("btn-upgrade-action");
+
+    if (btnUpgradeClose && premiumUpgradeModal) {
+        btnUpgradeClose.addEventListener("click", () => {
+            premiumUpgradeModal.classList.add("hide");
+        });
+    }
+
+    if (btnUpgradeAction && premiumUpgradeModal) {
+        btnUpgradeAction.addEventListener("click", () => {
+            // 업그레이드 유도 모달을 닫고, 로그인 인증 비밀번호 모달을 띄워 0988 마스터 토큰 인증을 유도
+            premiumUpgradeModal.classList.add("hide");
+            sessionStorage.removeItem("mydamgong_token"); // 기존 게스트 토큰 제거
+            authModal.classList.remove("hide");
+            authPasswordInput.value = "";
+            authPasswordInput.focus();
+        });
+    }
+
+    // 7. AEO 상세 분석 모달 닫기 바인딩
     if (modalCloseBtn) {
         modalCloseBtn.addEventListener("click", () => {
             aeoDetailModal.classList.add("hide");
@@ -1384,6 +1585,9 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("click", (e) => {
         if (e.target === aeoDetailModal) {
             aeoDetailModal.classList.add("hide");
+        }
+        if (e.target === premiumUpgradeModal) {
+            premiumUpgradeModal.classList.add("hide");
         }
     });
 });

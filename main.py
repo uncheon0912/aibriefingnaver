@@ -897,69 +897,72 @@ async def analyze_keyword(
     return analysis_data
 
 @app.get("/api/blog/posts")
-async def get_blog_posts(blog_id: str = Query(..., description="네이버 블로그 ID 입력")):
+async def get_blog_posts(
+    blog_id: str = Query(..., description="네이버 블로그 ID 입력"),
+    offset: int = Query(0, description="건너뛸 포스트 개수"),
+    limit: int = Query(15, description="가져올 포스트 개수")
+):
     if not blog_id or not blog_id.strip():
         raise HTTPException(status_code=400, detail="블로그 ID를 입력해 주세요.")
     
     blog_id = blog_id.strip()
-    rss_url = f"https://rss.blog.naver.com/{blog_id}.xml"
+    import urllib.parse
     
     try:
-        response = requests.get(rss_url, timeout=10)
-        if response.status_code != 200:
-            raise HTTPException(status_code=404, detail="존재하지 않는 블로그이거나 RSS 피드가 비활성화되어 있습니다.")
+        count_per_page = 30
+        start_idx = offset
+        end_idx = offset + limit
         
-        # 한글 깨짐 방지용 apparent_encoding 적용 디코딩
-        encoding = response.apparent_encoding if response.apparent_encoding else "utf-8"
-        content_text = response.content.decode(encoding, errors="replace")
+        # 필요한 page 범위 계산 (1-based index)
+        start_page = (start_idx // count_per_page) + 1
+        end_page = ((end_idx - 1) // count_per_page) + 1
         
-        # CDATA 정제 헬퍼 함수
-        def clean_cdata(text):
-            if not text:
-                return ""
-            text = text.strip()
-            if text.startswith("<![CDATA[") and text.endswith("]]>"):
-                text = text[9:-3]
-            return text.strip()
+        raw_posts = []
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        
+        for page in range(start_page, end_page + 1):
+            url = f"https://blog.naver.com/PostTitleListAsync.naver?blogId={blog_id}&viewDate=&categoryNo=&parentCategoryNo=&countPerPage={count_per_page}&currentPage={page}"
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code != 200:
+                continue
             
-        # BeautifulSoup html.parser의 XML <link> 자가 종결 태그 오파싱 방지를 위해 
-        # 원본 XML 문자열에서 정규식을 활용해 <item> 노드 및 하위 요소를 안전하게 100% 추출
-        items_raw = re.findall(r"<item>(.*?)</item>", content_text, re.DOTALL)
+            data = response.json()
+            if data.get("resultCode") != "S":
+                continue
+                
+            raw_posts.extend(data.get("postList", []))
+            
+        # 범위 슬라이싱
+        # page 단위로 긁었으므로 오프셋 조정 필요
+        relative_start = start_idx - (start_page - 1) * count_per_page
+        sliced_raw = raw_posts[relative_start : relative_start + limit]
         
         posts = []
-        for item in items_raw[:50]:
-            title_match = re.search(r"<title>(.*?)</title>", item, re.DOTALL)
-            link_match = re.search(r"<link>(.*?)</link>", item, re.DOTALL)
-            pub_date_match = re.search(r"<pubDate>(.*?)</pubDate>", item, re.DOTALL | re.IGNORECASE)
+        for p in sliced_raw:
+            log_no = p.get("logNo")
+            title_enc = p.get("title", "")
+            title = urllib.parse.unquote_plus(title_enc)
+            link = f"https://blog.naver.com/{blog_id}/{log_no}"
             
-            title = clean_cdata(title_match.group(1)) if title_match else "제목 없음"
-            link = clean_cdata(link_match.group(1)) if link_match else ""
-            pub_date_raw = clean_cdata(pub_date_match.group(1)) if pub_date_match else ""
-            
-            pub_date = pub_date_raw
+            # 날짜 정제
+            add_date_raw = p.get("addDate", "").strip()
+            pub_date = add_date_raw
             iso_date = ""
-            if pub_date_raw:
-                try:
-                    parts = pub_date_raw.split()
-                    if len(parts) >= 4:
-                        day = parts[1]
-                        month_str = parts[2]
-                        year = parts[3]
-                        # 월 매핑
-                        months = {"Jan":"01", "Feb":"02", "Mar":"03", "Apr":"04", "May":"05", "Jun":"06",
-                                  "Jul":"07", "Aug":"08", "Sep":"09", "Oct":"10", "Nov":"11", "Dec":"12"}
-                        month = months.get(month_str[:3], "01")
-                        pub_date = f"{month}.{day}"
-                        
-                        try:
-                            day_int = int(day)
-                            year_int = int(year)
-                            iso_date = f"{year_int:04d}-{month}-{day_int:02d}"
-                        except:
-                            pass
-                except:
-                    pass
             
+            # YYYY.MM.DD. (끝에 점이 올 수도 있음) 형태 매칭
+            date_match = re.match(r"(\d{4})\.(\d{2})\.(\d{2})", add_date_raw)
+            if date_match:
+                year, month, day = date_match.groups()
+                pub_date = f"{month}.{day}"
+                iso_date = f"{year}-{month}-{day}"
+            else:
+                # relative date (e.g., '13시간 전', '방금 전') -> 오늘 날짜로 매핑
+                today = date.today()
+                pub_date = today.strftime("%m.%d")
+                iso_date = today.strftime("%Y-%m-%d")
+                
             # HTML 엔티티 복원
             title = BeautifulSoup(title, "html.parser").text
             
