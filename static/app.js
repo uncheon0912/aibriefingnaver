@@ -99,6 +99,13 @@ function playSuccessSound() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // 뷰 전환 관련 엘리먼트
+    const menuKeywordAnalyzer = document.getElementById("menu-keyword-analyzer");
+    const menuBlogDiagnose = document.getElementById("menu-blog-diagnose");
+    const viewKeywordAnalyzer = document.getElementById("view-keyword-analyzer");
+    const viewBlogDiagnose = document.getElementById("view-blog-diagnose");
+
+    // 기존 키워드 검색용 엘리먼트
     const searchForm = document.getElementById("search-form");
     const keywordInput = document.getElementById("keyword-input");
     const btnSpinner = document.getElementById("btn-spinner");
@@ -118,22 +125,72 @@ document.addEventListener("DOMContentLoaded", () => {
     const aiSourcesList = document.getElementById("ai-sources-list");
     const aiQuestionsList = document.getElementById("ai-questions-list");
     
-    // 신규 고도화 렌더링 엘리먼트
     const relatedKeywordsTbody = document.getElementById("related-keywords-tbody");
     const aeoCategoryBadge = document.getElementById("aeo-category-badge");
     const aeoChecklist = document.getElementById("aeo-checklist");
     
-    // [신규] 인용 썸네일 출처 관련 엘리먼트
     const multimediaBoard = document.getElementById("multimedia-board");
     const aiMultimediaList = document.getElementById("ai-multimedia-list");
 
-    // [신규] 보안 인증 모달 관련 엘리먼트 정의
+    // 보안 인증 모달 관련 엘리먼트 정의
     const authModal = document.getElementById("auth-modal");
     const authForm = document.getElementById("auth-form");
     const authPasswordInput = document.getElementById("auth-password-input");
     const authErrorMsg = document.getElementById("auth-error-msg");
 
-    // [신규] 게스트 / 마스터 배지 처리용 엘리먼트
+    // [신규] 블로그 진단(AI 추천 진단) 관련 엘리먼트
+    const blogForm = document.getElementById("blog-form");
+    const blogInput = document.getElementById("blog-input");
+    const blogSpinner = document.getElementById("blog-spinner");
+    const blogLoadingState = document.getElementById("blog-loading-state");
+    const blogResultSection = document.getElementById("blog-result-section");
+    const blogDiagnoseTbody = document.getElementById("blog-diagnose-tbody");
+
+    // 블로그 통계 엘리먼트
+    const statTotalPosts = document.getElementById("stat-total-posts");
+    const statSearchExposure = document.getElementById("stat-search-exposure");
+    const statSearchPercent = document.getElementById("stat-search-percent");
+    const statAiExposure = document.getElementById("stat-ai-exposure");
+    const statAiPercent = document.getElementById("stat-ai-percent");
+    const distBarAi = document.getElementById("dist-bar-ai");
+    const distBarSearch = document.getElementById("dist-bar-search");
+    const distCountAi = document.getElementById("dist-count-ai");
+    const distCountSearch = document.getElementById("dist-count-search");
+
+    // 필터 & 정렬 카운트 뱃지 엘리먼트
+    const chipCountAll = document.getElementById("chip-count-all");
+    const chipCountSearchOnly = document.getElementById("chip-count-search-only");
+    const chipCountAiActive = document.getElementById("chip-count-ai-active");
+    const chipCountAiRecommend = document.getElementById("chip-count-ai-recommend");
+
+    // 전역 상태 변수
+    let currentBlogPosts = []; // 최근 수집된 블로그 포스팅 데이터 보존
+    let activeFilter = "all";
+    let activeSort = "date";
+
+    // 0. 사이드바 메뉴 탭 전환 바인딩
+    menuKeywordAnalyzer.addEventListener("click", (e) => {
+        e.preventDefault();
+        menuKeywordAnalyzer.classList.add("active");
+        menuBlogDiagnose.classList.remove("active");
+        viewKeywordAnalyzer.classList.remove("hide");
+        viewBlogDiagnose.classList.add("hide");
+    });
+
+    menuBlogDiagnose.addEventListener("click", (e) => {
+        e.preventDefault();
+        menuBlogDiagnose.classList.add("active");
+        menuKeywordAnalyzer.classList.remove("active");
+        viewBlogDiagnose.classList.remove("hide");
+        viewKeywordAnalyzer.classList.add("hide");
+        
+        // 블로그 뷰로 들어갔을 때, 아직 글 수집을 안 했다면 기본 ID로 자동 시작
+        if (currentBlogPosts.length === 0) {
+            triggerBlogAnalysis();
+        }
+    });
+
+    // 게스트 / 마스터 배지 처리용 엘리먼트
     const headerBadgeContainer = document.getElementById("header-badge-container");
     let guestTimerInterval = null;
 
@@ -209,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // [신규] 비밀번호 입력할 때 틱 소리 재생
+    // 비밀번호 입력할 때 틱 소리 재생
     authPasswordInput.addEventListener("input", () => {
         playTickSound();
     });
@@ -225,14 +282,18 @@ document.addEventListener("DOMContentLoaded", () => {
             authErrorMsg.classList.add("hide");
             authPasswordInput.value = "";
             
-            // [요청사항] 로그인해서 들어갔을 때 검색어 입력창을 빈 칸으로!
+            // 로그인해서 들어갔을 때 검색어 입력창을 빈 칸으로!
             keywordInput.value = "";
             
-            // 인증 완료 후 초기 쿼리 파라미터가 있었다면 실시간 분석 자동 트리거
+            // 만약 현재 활성화된 뷰가 키워드 분석기이고 URL 쿼리 파라미터가 있었다면 자동 트리거
             const urlParams = new URLSearchParams(window.location.search);
             const initialKeyword = urlParams.get("keyword");
-            if (initialKeyword) {
+            if (initialKeyword && menuKeywordAnalyzer.classList.contains("active")) {
                 performAnalysis(initialKeyword, false);
+            } else if (menuBlogDiagnose.classList.contains("active")) {
+                triggerBlogAnalysis();
+            } else {
+                fetchAuthStatus();
             }
         } else {
             playErrorSound(); // 삐빅 오류 사운드
@@ -316,7 +377,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 4. 분석 데이터 동적 UI 렌더링
     function renderAnalysisResults(data) {
-        // 4.1. AI 브리핑 상태 및 답변 내용 렌더링
         const ai = data.ai_briefing;
         if (ai.active) {
             aiActiveStatus.textContent = "노출 중";
@@ -325,14 +385,12 @@ document.addEventListener("DOMContentLoaded", () => {
             aiActiveBadge.textContent = "AI 브리핑 노출";
             aiActiveBadge.className = "board-badge active";
             
-            // 백엔드가 포장해준 HTML 문단 및 표(Table) 구조 그대로 서빙
             aiBriefingBody.innerHTML = `
                 <div class="ai-answer-container">
                     ${ai.answer}
                 </div>
             `;
             
-            // [신규 고도화] 인용 썸네일 멀티미디어 리스트 렌더링
             if (ai.multimedia && ai.multimedia.length > 0) {
                 multimediaBoard.classList.remove("hide");
                 let multiHtml = "";
@@ -359,7 +417,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 aiMultimediaList.innerHTML = "";
             }
 
-            // [초고도화] 출처 리스트 렌더링 (스크린샷 12번 레이아웃 완벽 이식)
             if (ai.sources && ai.sources.length > 0) {
                 let sourcesHtml = '<div class="source-list-wrapper">';
                 ai.sources.forEach(src => {
@@ -381,7 +438,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 aiSourcesList.innerHTML = `<div class="empty-state-small">인용된 본문 출처 링크가 존재하지 않습니다.</div>`;
             }
 
-            // 관련 추천 질문 렌더링
             if (ai.related_questions && ai.related_questions.length > 0) {
                 let questionsHtml = '<div class="question-list-wrapper">';
                 ai.related_questions.forEach(q => {
@@ -395,7 +451,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 questionsHtml += '</div>';
                 aiQuestionsList.innerHTML = questionsHtml;
 
-                // 관련 질문 클릭 재검색 바인딩
                 document.querySelectorAll(".question-item").forEach(item => {
                     item.addEventListener("click", () => {
                         const nextKeyword = item.getAttribute("data-q");
@@ -408,7 +463,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
         } else {
-            // AI 브리핑 미노출 상태 처리
             aiActiveStatus.textContent = "미노출";
             aiActiveStatus.className = "metric-value";
             
@@ -428,12 +482,10 @@ document.addEventListener("DOMContentLoaded", () => {
             aiQuestionsList.innerHTML = `<div class="empty-state-small">추천된 질문 리스트가 존재하지 않습니다.</div>`;
         }
 
-        // 4.2. 메인 검색어 검색 트래픽 렌더링
         const vol = data.search_volume;
         totalSearchVolume.textContent = vol.total > 0 ? `${vol.total.toLocaleString()} 회` : "조회 불가";
         searchVolBreakdown.textContent = `PC: ${vol.pc.toLocaleString()} | 모바일: ${vol.mobile.toLocaleString()}`;
 
-        // 4.3. 경쟁 포화도 렌더링
         const comp = data.competition;
         if (comp.level === "HIGH") {
             competitionLevel.textContent = "높음 (HIGH)";
@@ -447,7 +499,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         saturationRate.textContent = `포화비율: ${comp.saturation_rate}% (발행 글: ${comp.doc_count.toLocaleString()}건)`;
 
-        // 4.4. 연관 검색어 분석 테이블 렌더링
         if (data.related_keywords && data.related_keywords.length > 0) {
             let tbodyHtml = "";
             data.related_keywords.forEach(rk => {
@@ -472,7 +523,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             relatedKeywordsTbody.innerHTML = tbodyHtml;
             
-            // 연관 검색어 행 클릭 시 즉시 신규 진단 실행
             document.querySelectorAll(".clickable-row").forEach(row => {
                 row.addEventListener("click", () => {
                     const clickKeyword = row.getAttribute("data-keyword");
@@ -484,7 +534,6 @@ document.addEventListener("DOMContentLoaded", () => {
             relatedKeywordsTbody.innerHTML = `<tr><td colspan="6" class="text-center">조회된 연관 검색어가 없습니다.</td></tr>`;
         }
 
-        // 4.5. AEO 블로그 노출 처방 체크리스트 렌더링
         const guide = data.aeo_guide;
         aeoCategoryBadge.textContent = guide.category;
         
@@ -502,7 +551,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             aeoChecklist.innerHTML = checklistHtml;
             
-            // 체크리스트 마이크로 인터랙션 바인딩
             document.querySelectorAll(".aeo-item").forEach(item => {
                 item.addEventListener("click", () => {
                     item.classList.toggle("completed");
@@ -513,24 +561,469 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 5. 뒤로 가기 / 앞으로 가기 (popstate) 이벤트 감지
+
+    // ==========================================================================
+    // [신규] 블로그 AI 추천 진단 핵심 인터랙션 스크립트
+    // ==========================================================================
+
+    // 네이버 블로그 URL에서 ID 파싱
+    function extractBlogId(inputVal) {
+        let val = inputVal.trim();
+        if (val.includes("blog.naver.com/")) {
+            // URL 형태인 경우: blog.naver.com/{id} 또는 blog.naver.com/PostView?blogId={id}
+            try {
+                if (val.includes("blogId=")) {
+                    const urlObj = new URL(val);
+                    return urlObj.searchParams.get("blogId");
+                } else {
+                    const parts = val.split("blog.naver.com/");
+                    const subParts = parts[1].split("/");
+                    return subParts[0].split("?")[0];
+                }
+            } catch(e) {
+                return val;
+            }
+        }
+        return val;
+    }
+
+    // 포스트 제목에서 대표 키워드 추출용 규칙
+    function extractRepresentativeKeyword(title, postUrl) {
+        // F5 새로고침 또는 키워드 기억을 위해 localStorage 캐시 확인
+        const cacheKey = `blog_kw_${postUrl}`;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) return cached.trim();
+
+        let cleanTitle = title.trim();
+        // 1. 대괄호 [...] 또는 중괄호 {...} 파싱
+        const bracketMatch = cleanTitle.match(/[\[\(\{]([^\]\)\}]+)[\]\)\}]/);
+        if (bracketMatch && bracketMatch[1].trim().length >= 2) {
+            return bracketMatch[1].trim();
+        }
+
+        // 2. 쉼표(,), 하이픈(-), 콜론(:) 구분 분석
+        const separatorMatch = cleanTitle.split(/[,:\-\|]/);
+        if (separatorMatch.length > 1 && separatorMatch[0].trim().length >= 2 && separatorMatch[0].trim().length <= 15) {
+            return separatorMatch[0].trim();
+        }
+
+        // 3. 앞의 1~2어절 추출
+        const words = cleanTitle.split(/\s+/);
+        if (words.length > 0) {
+            const firstTwo = words.slice(0, 2).join(" ");
+            if (firstTwo.length >= 2 && firstTwo.length <= 12) {
+                return firstTwo;
+            }
+            return words[0].substring(0, 10);
+        }
+
+        return "네이버 블로그";
+    }
+
+    // 블로그 폼 전송 이벤트
+    blogForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        triggerBlogAnalysis();
+    });
+
+    // 블로그 분석 구동기
+    async function triggerBlogAnalysis() {
+        const token = sessionStorage.getItem("mydamgong_token");
+        if (!token) {
+            checkAuthentication();
+            return;
+        }
+
+        const rawVal = blogInput.value.trim();
+        const blogId = extractBlogId(rawVal);
+        if (!blogId) return;
+
+        // 사이드바 대표 정보 동기화
+        document.getElementById("sidebar-blog-name").textContent = blogId;
+
+        blogSpinner.classList.remove("hide");
+        blogLoadingState.classList.remove("hide");
+        blogResultSection.classList.add("hide");
+
+        try {
+            const res = await fetch(`/api/blog/posts?blog_id=${encodeURIComponent(blogId)}`);
+            if (!res.ok) {
+                throw new Error("블로그 글 목록을 가져올 수 없습니다. 비공개이거나 아이디가 잘못되었습니다.");
+            }
+
+            const posts = await res.json();
+            if (posts.length === 0) {
+                throw new Error("수집된 최근 포스트가 없습니다.");
+            }
+
+            currentBlogPosts = posts.map(p => {
+                // 대표 키워드 매핑 및 캐시화
+                const kw = extractRepresentativeKeyword(p.title, p.link);
+                return {
+                    title: p.title,
+                    link: p.link,
+                    pub_date: p.pub_date,
+                    keyword: kw,
+                    search_volume: 0,
+                    saturation_rate: 0,
+                    exposure: "-",
+                    ai_status: "-",
+                    loading: true
+                };
+            });
+
+            blogLoadingState.classList.add("hide");
+            blogResultSection.classList.remove("hide");
+            
+            // 1차 목록 테이블 즉시 렌더링 (로딩 모드)
+            renderBlogTable();
+
+            // 순차적으로 병렬 분석 진단 호출 (서버 과부하 방지를 위해 순차 병렬)
+            diagnoseAllPosts(token);
+
+        } catch(err) {
+            alert(err.message || "블로그 조회 실패");
+            blogLoadingState.classList.add("hide");
+        } finally {
+            blogSpinner.classList.add("hide");
+        }
+    }
+
+    // 개별 행 진단 호출 루프
+    async function diagnoseAllPosts(token) {
+        // 병렬 요청 최대 3개씩 청킹하여 안정적 크롤링 진행
+        const batchSize = 3;
+        for (let i = 0; i < currentBlogPosts.length; i += batchSize) {
+            const batch = currentBlogPosts.slice(i, i + batchSize);
+            const promises = batch.map((post, idx) => {
+                const actualIdx = i + idx;
+                return diagnoseSinglePost(post, actualIdx, token);
+            });
+            await Promise.all(promises);
+            // 각 배치 완료 후 요약 통계 실시간 업데이트
+            calculateBlogStats();
+        }
+    }
+
+    // 포스트 1개당 개별 진단
+    async function diagnoseSinglePost(post, index, token) {
+        try {
+            const res = await fetch(`/api/blog/diagnose?post_url=${encodeURIComponent(post.link)}&keyword=${encodeURIComponent(post.keyword)}&token=${encodeURIComponent(token)}`);
+            if (res.status === 401) {
+                sessionStorage.removeItem("mydamgong_token");
+                checkAuthentication();
+                throw new Error("인증 실패");
+            }
+            if (res.status === 429) {
+                const errData = await res.json();
+                throw new Error(errData.detail || "제한 초과");
+            }
+
+            if (res.ok) {
+                const data = await res.json();
+                
+                // 게스트 토큰 카운터 동기화
+                if (data.guest_info && document.getElementById("guest-count")) {
+                    document.getElementById("guest-count").textContent = data.guest_info.remaining;
+                }
+
+                currentBlogPosts[index].search_volume = data.search_volume;
+                currentBlogPosts[index].saturation_rate = data.saturation_rate;
+                currentBlogPosts[index].exposure = data.exposure;
+                currentBlogPosts[index].ai_status = data.ai_status;
+                currentBlogPosts[index].loading = false;
+            } else {
+                currentBlogPosts[index].loading = false;
+                currentBlogPosts[index].exposure = "X";
+                currentBlogPosts[index].ai_status = "미추천";
+            }
+        } catch(e) {
+            currentBlogPosts[index].loading = false;
+            currentBlogPosts[index].exposure = "X";
+            currentBlogPosts[index].ai_status = "미추천";
+            console.error("Single diagnose error", e);
+        }
+
+        // 해당 행만 부분 렌더링 갱신
+        updateTableRow(index);
+    }
+
+    // 진단 리스트 렌더링
+    function renderBlogTable() {
+        let html = "";
+        
+        // 필터링 적용
+        let filtered = currentBlogPosts.filter(p => {
+            if (activeFilter === "all") return true;
+            if (activeFilter === "search") return p.exposure === "O";
+            if (activeFilter === "ai-active") return p.ai_status === "추천" || p.ai_status === "미추천";
+            if (activeFilter === "ai-recommend") return p.ai_status === "추천";
+            return true;
+        });
+
+        // 정렬 적용
+        filtered.sort((a, b) => {
+            if (activeSort === "date") return 0; // RSS가 가져온 최신 순 유지
+            if (activeSort === "volume") return b.search_volume - a.search_volume;
+            if (activeSort === "saturation") return b.saturation_rate - a.saturation_rate;
+            return 0;
+        });
+
+        if (filtered.length === 0) {
+            blogDiagnoseTbody.innerHTML = `<tr><td colspan="7" class="text-center">해당 필터에 매칭되는 포스팅이 없습니다.</td></tr>`;
+            return;
+        }
+
+        filtered.forEach((p, idx) => {
+            const originalIndex = currentBlogPosts.indexOf(p);
+            html += buildRowHtml(p, originalIndex);
+        });
+
+        blogDiagnoseTbody.innerHTML = html;
+        bindTableEvents();
+    }
+
+    // 행 단위 HTML 생성기
+    function buildRowHtml(p, index) {
+        if (p.loading) {
+            return `
+                <tr id="blog-row-${index}">
+                    <td>${p.pub_date || "-"}</td>
+                    <td>
+                        <div class="post-info-container">
+                            <a href="${p.link}" target="_blank" class="post-title-link">${p.title}</a>
+                            <span class="post-url-sub">${p.link}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="keyword-cell-wrapper" id="kw-cell-${index}">
+                            <span class="kw-text">${p.keyword}</span>
+                            <button class="edit-keyword-btn" data-index="${index}"><i class="fa-solid fa-pen"></i></button>
+                        </div>
+                    </td>
+                    <td colspan="4">
+                        <div class="empty-state-small" style="padding: 0.5rem 0;">
+                            <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.4rem; color: var(--neon-blue);"></i> 
+                            네이버 AEO 실시간 교차 진단 중...
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        const volStr = p.search_volume > 0 ? `${p.search_volume.toLocaleString()}회` : "-";
+        const satStr = p.saturation_rate > 0 ? `${p.saturation_rate}%` : "-";
+        
+        let exposureHtml = `<span class="status-exposure no">X</span>`;
+        if (p.exposure === "O") {
+            exposureHtml = `<span class="status-exposure yes">O</span>`;
+        }
+
+        let aiBadgeHtml = `<span class="status-ai-badge none">-</span>`;
+        if (p.ai_status === "추천") {
+            aiBadgeHtml = `<span class="status-ai-badge recommend">추천</span>`;
+        } else if (p.ai_status === "미추천") {
+            aiBadgeHtml = `<span class="status-ai-badge not-recommend">미추천</span>`;
+        }
+
+        return `
+            <tr id="blog-row-${index}">
+                <td>${p.pub_date || "-"}</td>
+                <td>
+                    <div class="post-info-container">
+                        <a href="${p.link}" target="_blank" class="post-title-link" title="클릭하여 원본 블로그 글 새창 이동">${p.title}</a>
+                        <span class="post-url-sub">${p.link}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="keyword-cell-wrapper" id="kw-cell-${index}">
+                        <span class="kw-text" style="font-weight: 600; color: var(--neon-blue);">${p.keyword}</span>
+                        <button class="edit-keyword-btn" data-index="${index}"><i class="fa-solid fa-pen"></i></button>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-weight: 500;">${volStr}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-secondary); opacity: 0.7;">포화도: ${satStr}</div>
+                </td>
+                <td>${exposureHtml}</td>
+                <td>${aiBadgeHtml}</td>
+                <td>
+                    <button class="btn-table-action btn-detail-go" data-keyword="${p.keyword}">상세보기</button>
+                </td>
+            </tr>
+        `;
+    }
+
+    // 특정 행만 실시간 업데이트 (깜빡임 차단 효과)
+    function updateTableRow(index) {
+        const row = document.getElementById(`blog-row-${index}`);
+        if (!row) return;
+
+        const p = currentBlogPosts[index];
+        
+        // 렌더러 교체
+        const tempDiv = document.createElement("table");
+        tempDiv.innerHTML = buildRowHtml(p, index);
+        const newRow = tempDiv.querySelector("tr");
+        
+        row.parentNode.replaceChild(newRow, row);
+        
+        // 다시 이벤트 바인딩
+        bindRowEvents(index);
+    }
+
+    // 테이블 내 이벤트 바인딩
+    function bindTableEvents() {
+        currentBlogPosts.forEach((_, index) => {
+            bindRowEvents(index);
+        });
+    }
+
+    // 개별 행 내 이벤트 바인딩
+    function bindRowEvents(index) {
+        const row = document.getElementById(`blog-row-${index}`);
+        if (!row) return;
+
+        // 1. 키워드 펜 편집 버튼 바인딩
+        const editBtn = row.querySelector(".edit-keyword-btn");
+        if (editBtn) {
+            editBtn.addEventListener("click", () => {
+                const cell = document.getElementById(`kw-cell-${index}`);
+                const currentKw = currentBlogPosts[index].keyword;
+                
+                cell.innerHTML = `<input type="text" class="keyword-edit-input" value="${currentKw}" id="kw-input-${index}">`;
+                const input = document.getElementById(`kw-input-${index}`);
+                input.focus();
+                input.select();
+
+                // 입력 마감 처리
+                const finishEdit = async () => {
+                    const nextKw = input.value.trim();
+                    if (nextKw && nextKw !== currentKw) {
+                        currentBlogPosts[index].keyword = nextKw;
+                        
+                        // 로컬스토리지 캐시 저장
+                        localStorage.setItem(`blog_kw_${currentBlogPosts[index].link}`, nextKw);
+                        
+                        // 로딩 상태 갱신 및 백엔드 실시간 1개 재진단 가동
+                        currentBlogPosts[index].loading = true;
+                        updateTableRow(index);
+                        
+                        const token = sessionStorage.getItem("mydamgong_token");
+                        await diagnoseSinglePost(currentBlogPosts[index], index, token);
+                        calculateBlogStats();
+                    } else {
+                        // 수정 취소 또는 동일값
+                        updateTableRow(index);
+                    }
+                };
+
+                input.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") finishEdit();
+                    if (e.key === "Escape") updateTableRow(index);
+                });
+                
+                input.addEventListener("blur", finishEdit);
+            });
+        }
+
+        // 2. 상세보기 점프 바인딩
+        const detailBtn = row.querySelector(".btn-detail-go");
+        if (detailBtn) {
+            detailBtn.addEventListener("click", () => {
+                const clickKw = detailBtn.getAttribute("data-keyword");
+                
+                // 기존 키워드 분석 탭 뷰로 전환하고 즉시 분석 구동
+                menuKeywordAnalyzer.click();
+                keywordInput.value = clickKw;
+                performAnalysis(clickKw, true);
+            });
+        }
+    }
+
+    // 상단 통계 수치 연산 및 실시간 렌더링
+    function calculateBlogStats() {
+        const total = currentBlogPosts.length;
+        if (total === 0) return;
+
+        let searchCount = 0;
+        let aiCount = 0;
+        let aiActiveCount = 0;
+
+        currentBlogPosts.forEach(p => {
+            if (p.exposure === "O") searchCount++;
+            if (p.ai_status === "추천") aiCount++;
+            if (p.ai_status === "추천" || p.ai_status === "미추천") aiActiveCount++;
+        });
+
+        // 1. 뱃지 카운트 현황판 업데이트
+        chipCountAll.textContent = total;
+        chipCountSearchOnly.textContent = searchCount;
+        chipCountAiActive.textContent = aiActiveCount;
+        chipCountAiRecommend.textContent = aiCount;
+
+        // 2. 통계 텍스트 업데이트
+        statTotalPosts.textContent = total;
+        statSearchExposure.textContent = `${searchCount}/${total}`;
+        
+        const searchPercent = total > 0 ? Math.round((searchCount / total) * 100) : 0;
+        statSearchPercent.textContent = `${searchPercent}% 노출`;
+
+        statAiExposure.textContent = aiCount;
+        
+        const aiPercent = total > 0 ? Math.round((aiCount / total) * 100) : 0;
+        statAiPercent.textContent = `${aiPercent}%`;
+
+        // 3. 그래프 분배 바 업데이트
+        distBarAi.style.width = `${aiPercent}%`;
+        distBarSearch.style.width = `${searchPercent}%`;
+
+        distCountAi.textContent = `${aiPercent}% (${aiCount})`;
+        distCountSearch.textContent = `${searchPercent}% (${searchCount})`;
+    }
+
+    // 필터 칩 클릭 바인딩
+    document.querySelectorAll(".filter-chips .chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+            document.querySelectorAll(".filter-chips .chip").forEach(c => c.classList.remove("active"));
+            chip.classList.add("active");
+            activeFilter = chip.getAttribute("data-filter");
+            renderBlogTable();
+        });
+    });
+
+    // 정렬 클릭 바인딩
+    document.querySelectorAll(".sort-controls .sort-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".sort-controls .sort-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            activeSort = btn.getAttribute("data-sort");
+            renderBlogTable();
+        });
+    });
+
+
+    // ==========================================================================
+    // 기존 URL 뒤로 가기 / 앞으로 가기 감지 및 초기 파라미터 제어
+    // ==========================================================================
+
     window.addEventListener("popstate", async (e) => {
         if (e.state && e.state.keyword) {
             keywordInput.value = e.state.keyword;
+            // 탭 뷰 강제 전환
+            menuKeywordAnalyzer.click();
             await performAnalysis(e.state.keyword, false);
         } else {
-            // 초기 빈 화면 복원
             keywordInput.value = "";
             resultSection.classList.add("hide");
             loadingState.classList.add("hide");
         }
     });
 
-    // 6. 초기 로드 시 URL 파라미터 분석 및 자동 진단
     const urlParams = new URLSearchParams(window.location.search);
     const initialKeyword = urlParams.get("keyword");
     
-    // [요청사항] 왼쪽 상단 로고 클릭 시 쿼리 파라미터 소거하고 홈 새로고침 이동
+    // 왼쪽 상단 로고 클릭 시 파라미터 날리고 초기 새로고침 이동
     const logoBtn = document.getElementById("logo-btn");
     if (logoBtn) {
         logoBtn.addEventListener("click", () => {
@@ -540,7 +1033,6 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (checkAuthentication()) {
         if (initialKeyword) {
-            // [요청사항] 자동 분석은 돌리되 검색 필드는 깨끗하게 빈 값 보장!
             keywordInput.value = "";
             history.replaceState({ keyword: initialKeyword }, "", window.location.search);
             performAnalysis(initialKeyword, false);

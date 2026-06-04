@@ -896,6 +896,230 @@ async def analyze_keyword(
         
     return analysis_data
 
+@app.get("/api/blog/posts")
+async def get_blog_posts(blog_id: str = Query(..., description="네이버 블로그 ID 입력")):
+    if not blog_id or not blog_id.strip():
+        raise HTTPException(status_code=400, detail="블로그 ID를 입력해 주세요.")
+    
+    blog_id = blog_id.strip()
+    rss_url = f"https://rss.blog.naver.com/{blog_id}.xml"
+    
+    try:
+        response = requests.get(rss_url, timeout=10)
+        if response.status_code != 200:
+            raise HTTPException(status_code=404, detail="존재하지 않는 블로그이거나 RSS 피드가 비활성화되어 있습니다.")
+        
+        # 한글 깨짐 방지용 apparent_encoding 적용 디코딩
+        encoding = response.apparent_encoding if response.apparent_encoding else "utf-8"
+        content_text = response.content.decode(encoding, errors="replace")
+        
+        # BeautifulSoup html.parser로 XML 파싱 호환 처리
+        soup = BeautifulSoup(content_text, "html.parser")
+        items = soup.find_all("item")
+        
+        posts = []
+        for item in items[:10]:
+            title = item.find("title").text if item.find("title") else "제목 없음"
+            link = item.find("link").text if item.find("link") else ""
+            
+            # pubDate 파싱 및 간단한 포맷 변경
+            pub_date = item.find("pubdate").text if item.find("pubdate") else ""
+            if pub_date:
+                # 'Tue, 02 Jun 2026 01:22:00 +0900' -> '06.02' 형식으로 포맷팅
+                try:
+                    parts = pub_date.split()
+                    if len(parts) >= 4:
+                        day = parts[1]
+                        month_str = parts[2]
+                        # 월 매핑
+                        months = {"Jan":"01", "Feb":"02", "Mar":"03", "Apr":"04", "May":"05", "Jun":"06",
+                                  "Jul":"07", "Aug":"08", "Sep":"09", "Oct":"10", "Nov":"11", "Dec":"12"}
+                        month = months.get(month_str[:3], "01")
+                        pub_date = f"{month}.{day}"
+                except:
+                    pass
+            
+            # 타이틀 정제
+            title = BeautifulSoup(title, "html.parser").text
+            
+            posts.append({
+                "title": title,
+                "link": link,
+                "pub_date": pub_date
+            })
+            
+        return posts
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"블로그 글 수집 중 오류: {str(e)}")
+
+@app.get("/api/blog/diagnose")
+async def diagnose_blog_post(
+    request: Request,
+    post_url: str = Query(..., description="포스팅 URL 주소"),
+    keyword: str = Query(..., description="진단할 타겟 키워드"),
+    token: str = Query(None, description="비밀번호 토큰")
+):
+    if not token:
+        raise HTTPException(status_code=401, detail="비밀번호를 입력해 주세요.")
+        
+    token = token.strip()
+    if token == "0988":
+        pass
+    elif token == "5420":
+        ip = request.client.host
+        now = datetime.now()
+        today = date.today()
+        
+        # 1분 이내 쿨타임 체크 (5회 제한)
+        guest_rate_limits[ip]["timestamps"] = [
+            t for t in guest_rate_limits[ip]["timestamps"] if (now - t).total_seconds() < 60
+        ]
+        if len(guest_rate_limits[ip]["timestamps"]) >= 5:
+            raise HTTPException(
+                status_code=429, 
+                detail="[게스트 제한] 1분 이내에 5회 이상 검색할 수 없습니다. 쿨타임이 필요합니다."
+            )
+            
+        # 일일 누적 검색 횟수 체크 (10회 제한)
+        if guest_rate_limits[ip]["daily_count"][today] >= 10:
+            raise HTTPException(
+                status_code=429, 
+                detail="[게스트 제한] 하루 최대 10회만 검색 가능합니다. 마스터 비밀번호를 사용해 주세요."
+            )
+            
+        guest_rate_limits[ip]["timestamps"].append(now)
+        guest_rate_limits[ip]["daily_count"][today] += 1
+    else:
+        raise HTTPException(status_code=401, detail="비밀번호가 올바르지 않습니다.")
+
+    if not post_url or not keyword or not keyword.strip():
+        raise HTTPException(status_code=400, detail="필수 진단 매개변수가 누락되었습니다.")
+        
+    keyword = keyword.strip()
+    post_url = post_url.strip()
+    
+    # post_url에서 blog_id와 log_no 추출
+    blog_id = ""
+    log_no = ""
+    
+    # 1. blog.naver.com/{blog_id}/{log_no}
+    match1 = re.search(r"blog\.naver\.com/([a-zA-Z0-9_-]+)/(\d+)", post_url)
+    if match1:
+        blog_id = match1.group(1)
+        log_no = match1.group(2)
+    else:
+        # 2. blogId={blog_id}&logNo={log_no}
+        match2_id = re.search(r"blogId=([a-zA-Z0-9_-]+)", post_url)
+        match2_no = re.search(r"logNo=(\d+)", post_url)
+        if match2_id and match2_no:
+            blog_id = match2_id.group(1)
+            log_no = match2_no.group(2)
+            
+    if not blog_id or not log_no:
+        raise HTTPException(status_code=400, detail="유효한 네이버 블로그 포스트 주소가 아닙니다.")
+        
+    loop = asyncio.get_event_loop()
+    
+    # 1) 통합검색 노출 체크 실행
+    def check_exposure():
+        url = f"https://m.search.naver.com/search.naver?query={requests.utils.quote(keyword)}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+        }
+        try:
+            res = requests.get(url, headers=headers, timeout=10)
+            if res.status_code == 200:
+                html = res.text
+                if log_no in html and blog_id in html:
+                    return "O"
+            return "X"
+        except:
+            return "X"
+            
+    task_exposure = loop.run_in_executor(executor, check_exposure)
+    
+    # 2) AI 브리핑 스크래퍼 실행
+    task_ai_scraper = loop.run_in_executor(executor, scrape_naver_ai_briefing, keyword)
+    
+    # 3) 광고 API 검색량 & 블로그 발행문서수 병렬 실행
+    task_ad_api = loop.run_in_executor(executor, get_keyword_search_volume, [keyword])
+    task_doc_count = loop.run_in_executor(executor, get_blog_document_count, keyword)
+    
+    exposure, ai_briefing, ad_results, doc_count = await asyncio.gather(
+        task_exposure, task_ai_scraper, task_ad_api, task_doc_count
+    )
+    
+    # 광고 트래픽 계산
+    pc_vol = 0
+    mo_vol = 0
+    total_vol = 0
+    if ad_results:
+        matched = None
+        for item in ad_results:
+            if item.get("relKeyword", "").replace(" ", "") == keyword.replace(" ", ""):
+                matched = item
+                break
+        if matched:
+            try:
+                pc_vol = int(matched.get("monthlyPcQcCnt", 0))
+            except:
+                pc_vol = 5
+            try:
+                mo_vol = int(matched.get("monthlyMobileQcCnt", 0))
+            except:
+                mo_vol = 5
+            total_vol = pc_vol + mo_vol
+            
+    saturation_rate = 0.0
+    if total_vol > 0:
+        saturation_rate = round((doc_count / total_vol) * 100, 2)
+        
+    # AI 성과 판단 (추천 / 미추천 / -)
+    ai_status = "-"
+    if ai_briefing.get("active"):
+        ai_status = "미추천"
+        # 출처 리스트에서 매칭 검사
+        sources = ai_briefing.get("sources", [])
+        multimedia = ai_briefing.get("multimedia", [])
+        
+        is_cited = False
+        for src in sources:
+            if log_no in src.get("url", ""):
+                is_cited = True
+                break
+        if not is_cited:
+            for multi in multimedia:
+                if log_no in multi.get("url", ""):
+                    is_cited = True
+                    break
+                    
+        if is_cited:
+            ai_status = "추천"
+            
+    # 응답 빌드
+    result = {
+        "keyword": keyword,
+        "search_volume": total_vol,
+        "saturation_rate": saturation_rate,
+        "exposure": exposure,
+        "ai_status": ai_status,
+        "ai_active": ai_briefing.get("active", False)
+    }
+    
+    # 게스트 토큰 잔여 수치 반환
+    if token == "5420":
+        ip = request.client.host
+        today = date.today()
+        count = guest_rate_limits[ip]["daily_count"][today]
+        result["guest_info"] = {
+            "remaining": max(0, 10 - count),
+            "limit": 10
+        }
+        
+    return result
+
 # 정적 파일 서빙 등록 (프론트엔드 static 폴더)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 

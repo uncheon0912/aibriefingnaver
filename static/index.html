@@ -12,14 +12,14 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS (캐시 방지 버전 적용) -->
-    <link rel="stylesheet" href="style.css?v=1.3">
+    <link rel="stylesheet" href="style.css?v=1.5">
 </head>
 <body>
     <!-- 백그라운드 우주 네온 광원 이펙트 -->
     <div class="bg-glow bg-glow-purple"></div>
     <div class="bg-glow bg-glow-blue"></div>
 
-    <!-- 보안 비밀번호 인증 모달 (기본 숨김 해제 상태는 app.js에서 제어) -->
+    <!-- 보안 비밀번호 인증 모달 -->
     <div id="auth-modal" class="auth-modal-overlay hide">
         <div class="auth-modal-card glass-panel">
             <div class="auth-header">
@@ -43,211 +43,352 @@
         </div>
     </div>
 
-    <div class="app-container">
-        <!-- 상단 헤더 영역 -->
-        <header class="app-header">
-            <div class="logo" id="logo-btn" style="cursor: pointer;" title="메인 화면으로 새로고침">
+    <!-- 초프리미엄 2열 웹앱 레이아웃 구조 -->
+    <div class="app-layout">
+        <!-- 1. 왼쪽 사이드바 (내비게이션) -->
+        <aside class="app-sidebar glass-panel">
+            <div class="sidebar-logo" id="logo-btn">
                 <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
                 <span class="logo-text">미담공장 <span>AX</span></span>
             </div>
-            <div class="header-badge" id="header-badge-container">
-                <span class="badge-dot"></span> NAVER AEO 진단 베타 v1.0
+            
+            <nav class="sidebar-menu">
+                <div class="menu-section-title">핵심 대시보드</div>
+                <a href="#" class="menu-item active" id="menu-keyword-analyzer">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                    <span>키워드 진단기</span>
+                </a>
+                
+                <div class="menu-section-title">AEO 분석 도구</div>
+                <a href="#" class="menu-item" id="menu-blog-diagnose">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>AI 추천 진단 (블로그)</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-user-card">
+                    <div class="user-avatar-wrapper">
+                        <i class="fa-brands fa-blogger b-icon"></i>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="sidebar-blog-name">qnfehrvkxmsj</span>
+                        <span class="user-role">대표 진단 블로그</span>
+                    </div>
+                </div>
             </div>
-        </header>
+        </aside>
 
-        <!-- 메인 콘텐츠 영역 -->
-        <main class="main-content">
-            <!-- 소개 문구 및 타이틀 -->
-            <section class="hero-section">
-                <h1>네이버 AI 브리핑 노출 진단 및 분석</h1>
-                <p>원하는 키워드를 입력해 보세요. 실시간 네이버 검색 트래픽과 AI 브리핑 답변 구조, 인용 출처 정보를 즉시 수집하고 분석해 줍니다.</p>
-            </section>
-
-            <!-- 검색바 카드 (유리 질감) -->
-            <section class="search-card glass-panel">
-                <form id="search-form" class="search-form">
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                        <input type="text" id="keyword-input" placeholder="분석할 키워드를 입력하세요 (예: geo aeo 의 차이점은)" required autocomplete="off">
-                    </div>
-                    <button type="submit" class="btn-submit">
-                        <span>진단 시작</span>
-                        <i class="fa-solid fa-circle-notch spinner-icon hide" id="btn-spinner"></i>
-                    </button>
-                </form>
-                <div class="recommendations">
-                    <span class="rec-title">추천 검색어 :</span>
-                    <button class="rec-tag">geo aeo 의 차이점은</button>
-                    <button class="rec-tag">사과 효능</button>
-                    <button class="rec-tag">애플 헤드폰 추천</button>
+        <!-- 2. 오른쪽 메인 콘텐츠 영역 -->
+        <div class="main-layout-content">
+            <!-- 상단 미니 배지 헤더 -->
+            <header class="main-app-header">
+                <div class="header-badge" id="header-badge-container">
+                    <span class="badge-dot"></span> NAVER AEO 진단 베타 v1.0
                 </div>
-            </section>
+            </header>
 
-            <!-- 로딩 화면 -->
-            <div id="loading-state" class="loading-state hide">
-                <div class="neural-loader">
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                    <div class="dot"></div>
-                </div>
-                <p class="loading-text">네이버 광고 API 및 통합검색 데이터를 실시간 스캔하는 중입니다...</p>
-            </div>
+            <main class="main-content-scroll">
+                
+                <!-- ==================== 뷰 1. 키워드 진단기 뷰 ==================== -->
+                <div id="view-keyword-analyzer" class="view-panel">
+                    <!-- 소개 문구 및 타이틀 -->
+                    <section class="hero-section">
+                        <h1>네이버 AI 브리핑 노출 진단 및 분석</h1>
+                        <p>원하는 키워드를 입력해 보세요. 실시간 네이버 검색 트래픽과 AI 브리핑 답변 구조, 인용 출처 정보를 즉시 수집하고 분석해 줍니다.</p>
+                    </section>
 
-            <!-- 분석 결과 섹션 (기본 숨김) -->
-            <div id="result-section" class="result-section hide">
-                <!-- 1. 핵심 요약 메트릭 카드 -->
-                <div class="metrics-grid">
-                    <!-- AI 브리핑 활성화 카드 -->
-                    <div class="metric-card glass-panel" id="card-ai-status">
-                        <div class="card-icon-wrapper purple-neon">
-                            <i class="fa-solid fa-microchip"></i>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">AI 브리핑 상태</span>
-                            <h3 class="metric-value" id="ai-active-status">-</h3>
-                        </div>
-                        <div class="card-glow"></div>
-                    </div>
-
-                    <!-- 월간 검색량 카드 -->
-                    <div class="metric-card glass-panel" id="card-search-volume">
-                        <div class="card-icon-wrapper blue-neon">
-                            <i class="fa-solid fa-chart-line"></i>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">월간 총 검색량</span>
-                            <h3 class="metric-value" id="total-search-volume">-</h3>
-                            <span class="metric-sub" id="search-vol-breakdown">PC - | 모바일 -</span>
-                        </div>
-                        <div class="card-glow"></div>
-                    </div>
-
-                    <!-- 경쟁강도/포화도 카드 -->
-                    <div class="metric-card glass-panel" id="card-competition">
-                        <div class="card-icon-wrapper green-neon">
-                            <i class="fa-solid fa-gauge-high"></i>
-                        </div>
-                        <div class="metric-info">
-                            <span class="metric-label">경쟁 포화도</span>
-                            <h3 class="metric-value" id="competition-level">-</h3>
-                            <span class="metric-sub" id="saturation-rate">비율: -% (문서 수: -건)</span>
-                        </div>
-                        <div class="card-glow"></div>
-                    </div>
-                </div>
-
-                <!-- 2. AI 브리핑 상세 요약 분석 보드 (2열 구조) -->
-                <div class="analysis-board-grid">
-                    <!-- 2.1. 좌측 메인 영역 (AI 브리핑 결과 및 연관검색어 테이블) -->
-                    <div class="main-column">
-                        <!-- AI 브리핑 요약 보드 -->
-                        <div class="board-column glass-panel main-board">
-                            <div class="board-header">
-                                <i class="fa-solid fa-robot header-icon text-glow-purple"></i>
-                                <h2>네이버 AI 브리핑 실시간 요약</h2>
-                                <span class="board-badge" id="ai-active-badge">미노출</span>
+                    <!-- 검색바 카드 (유리 질감) -->
+                    <section class="search-card glass-panel">
+                        <form id="search-form" class="search-form">
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                <input type="text" id="keyword-input" placeholder="분석할 키워드를 입력하세요 (예: geo aeo 의 차이점은)" required autocomplete="off">
                             </div>
-                            <div class="board-content" id="ai-briefing-body">
-                                <div class="empty-state">
-                                    <i class="fa-solid fa-circle-info"></i>
-                                    <p>해당 키워드는 네이버에서 AI 브리핑을 제공하지 않는 키워드이거나, 정보를 수집할 수 없습니다.</p>
+                            <button type="submit" class="btn-submit">
+                                <span>진단 시작</span>
+                                <i class="fa-solid fa-circle-notch spinner-icon hide" id="btn-spinner"></i>
+                            </button>
+                        </form>
+                        <div class="recommendations">
+                            <span class="rec-title">추천 검색어 :</span>
+                            <button class="rec-tag">geo aeo 의 차이점은</button>
+                            <button class="rec-tag">사과 효능</button>
+                            <button class="rec-tag">애플 헤드폰 추천</button>
+                        </div>
+                    </section>
+
+                    <!-- 로딩 화면 -->
+                    <div id="loading-state" class="loading-state hide">
+                        <div class="neural-loader">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <p class="loading-text">네이버 광고 API 및 통합검색 데이터를 실시간 스캔하는 중입니다...</p>
+                    </div>
+
+                    <!-- 분석 결과 섹션 (기본 숨김) -->
+                    <div id="result-section" class="result-section hide">
+                        <!-- 1. 핵심 요약 메트릭 카드 -->
+                        <div class="metrics-grid">
+                            <!-- AI 브리핑 활성화 카드 -->
+                            <div class="metric-card glass-panel" id="card-ai-status">
+                                <div class="card-icon-wrapper purple-neon">
+                                    <i class="fa-solid fa-microchip"></i>
                                 </div>
+                                <div class="metric-info">
+                                    <span class="metric-label">AI 브리핑 상태</span>
+                                    <h3 class="metric-value" id="ai-active-status">-</h3>
+                                </div>
+                                <div class="card-glow"></div>
+                            </div>
+
+                            <!-- 월간 검색량 카드 -->
+                            <div class="metric-card glass-panel" id="card-search-volume">
+                                <div class="card-icon-wrapper blue-neon">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                </div>
+                                <div class="metric-info">
+                                    <span class="metric-label">월간 총 검색량</span>
+                                    <h3 class="metric-value" id="total-search-volume">-</h3>
+                                    <span class="metric-sub" id="search-vol-breakdown">PC - | 모바일 -</span>
+                                </div>
+                                <div class="card-glow"></div>
+                            </div>
+
+                            <!-- 경쟁강도/포화도 카드 -->
+                            <div class="metric-card glass-panel" id="card-competition">
+                                <div class="card-icon-wrapper green-neon">
+                                    <i class="fa-solid fa-gauge-high"></i>
+                                </div>
+                                <div class="metric-info">
+                                    <span class="metric-label">경쟁 포화도</span>
+                                    <h3 class="metric-value" id="competition-level">-</h3>
+                                    <span class="metric-sub" id="saturation-rate">비율: -% (문서 수: -건)</span>
+                                </div>
+                                <div class="card-glow"></div>
+                            </div>
                         </div>
 
-                        <!-- [신규 고도화] 인용 썸네일 출처 (멀티미디어) 보드 -->
-                        <div class="board-column glass-panel multimedia-board hide" id="multimedia-board">
-                            <div class="board-header">
-                                <i class="fa-solid fa-images header-icon text-glow-purple"></i>
-                                <h2>인용 썸네일 출처</h2>
+                        <!-- 2. AI 브리핑 상세 요약 분석 보드 (2열 구조) -->
+                        <div class="analysis-board-grid">
+                            <!-- 2.1. 좌측 메인 영역 -->
+                            <div class="main-column">
+                                <div class="board-column glass-panel main-board">
+                                    <div class="board-header">
+                                        <i class="fa-solid fa-robot header-icon text-glow-purple"></i>
+                                        <h2>네이버 AI 브리핑 실시간 요약</h2>
+                                        <span class="board-badge" id="ai-active-badge">미노출</span>
+                                    </div>
+                                    <div class="board-content" id="ai-briefing-body">
+                                        <div class="empty-state">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            <p>해당 키워드는 네이버에서 AI 브리핑을 제공하지 않는 키워드이거나, 정보를 수집할 수 없습니다.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 인용 썸네일 출처 보드 -->
+                                <div class="board-column glass-panel multimedia-board hide" id="multimedia-board">
+                                    <div class="board-header">
+                                        <i class="fa-solid fa-images header-icon text-glow-purple"></i>
+                                        <h2>인용 썸네일 출처</h2>
+                                    </div>
+                                    <div class="board-content">
+                                        <p class="aeo-intro">네이버 AI 브리핑 상단 카드 뉴스 영역에 인용 노출되고 있는 핵심 이미지 원본 출처 목록입니다.</p>
+                                        <div class="thumbnail-grid" id="ai-multimedia-list"></div>
+                                    </div>
+                                </div>
+
+                                <!-- 연관 검색어 분석 테이블 보드 -->
+                                <div class="board-column glass-panel table-board">
+                                    <div class="board-header">
+                                        <i class="fa-solid fa-table-list header-icon text-glow-blue"></i>
+                                        <h2>연관 검색어 트래픽 및 경쟁 분석 (Top 8)</h2>
+                                    </div>
+                                    <div class="board-content">
+                                        <div class="table-responsive">
+                                            <table class="premium-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>추천 연관 검색어</th>
+                                                        <th>PC 검색량</th>
+                                                        <th>모바일 검색량</th>
+                                                        <th>월간 총합</th>
+                                                        <th>예측 발행글</th>
+                                                        <th>경쟁강도</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="related-keywords-tbody">
+                                                    <tr>
+                                                        <td colspan="6" class="text-center">조회된 연관 검색어가 없습니다.</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="board-content">
-                                <p class="aeo-intro">네이버 AI 브리핑 상단 카드 뉴스 영역에 인용 노출되고 있는 핵심 이미지 원본 출처 목록입니다.</p>
-                                <div class="thumbnail-grid" id="ai-multimedia-list">
-                                    <!-- 동적으로 추가될 썸네일 카드 목록 -->
+
+                            <!-- 2.2. 우측 사이드바 영역 -->
+                            <div class="board-column-side">
+                                <div class="board-column glass-panel side-card aeo-prescription-card">
+                                    <div class="board-header">
+                                        <i class="fa-solid fa-notes-medical header-icon text-glow-purple"></i>
+                                        <h2>AEO 블로그 노출 처방전</h2>
+                                        <span class="category-badge" id="aeo-category-badge">일반 정보</span>
+                                    </div>
+                                    <div class="board-content">
+                                        <p class="aeo-intro">이 키워드로 네이버 블로그 포스팅을 작성할 때, AI 브리핑에 채택 및 인용되기 위한 실무 가이드라인입니다.</p>
+                                        <div class="aeo-checklist-wrapper" id="aeo-checklist"></div>
+                                    </div>
+                                </div>
+
+                                <div class="board-column glass-panel side-card">
+                                    <div class="board-header">
+                                        <i class="fa-solid fa-quote-left header-icon text-glow-blue"></i>
+                                        <h2>인용 본문 출처 리스트</h2>
+                                    </div>
+                                    <div class="board-content" id="ai-sources-list">
+                                        <div class="empty-state-small">인용된 출처가 존재하지 않습니다.</div>
+                                    </div>
+                                </div>
+
+                                <div class="board-column glass-panel side-card">
+                                    <div class="board-header">
+                                        <i class="fa-solid fa-circle-question header-icon text-glow-green"></i>
+                                        <h2>AI 관련 질문 추천</h2>
+                                    </div>
+                                    <div class="board-content" id="ai-questions-list">
+                                        <div class="empty-state-small">추천된 질문 리스트가 존재하지 않습니다.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== 뷰 2. AI 추천 진단 (블로그) 뷰 ==================== -->
+                <div id="view-blog-diagnose" class="view-panel hide">
+                    <section class="hero-section">
+                        <h1>AI 추천 진단 (블로그 성과 분석)</h1>
+                        <p>내 블로그 글이 네이버 AI 브리핑 및 통합검색 탭에 인용 및 추천되고 있는지 실시간 점검합니다.</p>
+                    </section>
+
+                    <!-- 블로그 주소 수집 카드 -->
+                    <section class="search-card glass-panel" style="margin-bottom: 2rem;">
+                        <form id="blog-form" class="search-form">
+                            <div class="input-wrapper">
+                                <i class="fa-brands fa-blogger search-icon"></i>
+                                <input type="text" id="blog-input" placeholder="네이버 블로그 주소 또는 ID 입력 (예: qnfehrvkxmsj)" value="https://blog.naver.com/qnfehrvkxmsj" required autocomplete="off">
+                            </div>
+                            <button type="submit" class="btn-submit">
+                                <span>글 수집 & 진단</span>
+                                <i class="fa-solid fa-circle-notch spinner-icon hide" id="blog-spinner"></i>
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- 수집 로딩 상태 -->
+                    <div id="blog-loading-state" class="loading-state hide">
+                        <div class="neural-loader">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <p class="loading-text">네이버 블로그 글 목록을 수집하여 포스트별 실시간 AEO 노출 진단을 시작하는 중입니다...</p>
+                    </div>
+
+                    <!-- 블로그 성과 통계 및 대시보드 리스트 (성공 시 노출) -->
+                    <div id="blog-result-section" class="blog-result-section hide">
+                        <!-- 상단 성과 통계 지표 카드 -->
+                        <div class="blog-stats-grid">
+                            <div class="stat-card glass-panel">
+                                <span class="stat-label">전체 분석 포스트</span>
+                                <h2 class="stat-value" id="stat-total-posts">0</h2>
+                                <span class="stat-sub">수집된 최신 글 수</span>
+                            </div>
+                            <div class="stat-card glass-panel">
+                                <span class="stat-label">통합검색 노출</span>
+                                <h2 class="stat-value text-glow-blue" id="stat-search-exposure">0/0</h2>
+                                <span class="stat-sub" id="stat-search-percent">0% 노출</span>
+                            </div>
+                            <div class="stat-card glass-panel">
+                                <span class="stat-label">AI 브리핑 노출</span>
+                                <h2 class="stat-value text-glow-purple" id="stat-ai-exposure">0</h2>
+                                <span class="stat-sub">AI 답변에 인용된 키워드</span>
+                            </div>
+                            <div class="stat-card glass-panel">
+                                <span class="stat-label">최종 AI 추천률</span>
+                                <h2 class="stat-value text-glow-green" id="stat-ai-percent">0%</h2>
+                                <span class="stat-sub">인용 성공 확률</span>
+                            </div>
+                            <div class="stat-card glass-panel span-2-col">
+                                <span class="stat-label">카테고리별 AI 추천 분포</span>
+                                <div class="category-distribution-wrapper">
+                                    <div class="dist-bar-container">
+                                        <div class="dist-bar-fill" id="dist-bar-ai" style="width: 0%;"></div>
+                                        <div class="dist-bar-fill-sub" id="dist-bar-search" style="width: 0%;"></div>
+                                    </div>
+                                    <div class="dist-labels">
+                                        <span><span class="color-dot bg-green"></span>AI 추천: <span id="dist-count-ai">0% (0)</span></span>
+                                        <span><span class="color-dot bg-blue"></span>통합검색 노출: <span id="dist-count-search">0% (0)</span></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 연관 검색어 분석 테이블 보드 (나에오 대시보드 스크린샷 2번 완벽 대응) -->
-                        <div class="board-column glass-panel table-board">
-                            <div class="board-header">
-                                <i class="fa-solid fa-table-list header-icon text-glow-blue"></i>
-                                <h2>연관 검색어 트래픽 및 경쟁 분석 (Top 8)</h2>
+                        <!-- 필터 및 정렬 제어 바 -->
+                        <div class="blog-control-bar">
+                            <div class="filter-chips">
+                                <button class="chip active" data-filter="all">전체 <span id="chip-count-all">0</span></button>
+                                <button class="chip" data-filter="search">통합검색 노출 <span id="chip-count-search-only">0</span></button>
+                                <button class="chip" data-filter="ai-active">AI 브리핑 노출 <span id="chip-count-ai-active">0</span></button>
+                                <button class="chip" data-filter="ai-recommend">AI 추천 <span id="chip-count-ai-recommend">0</span></button>
                             </div>
-                            <div class="board-content">
+                            <div class="sort-controls">
+                                <button class="sort-btn active" data-sort="date">최신순 <i class="fa-solid fa-arrow-down-short-wide"></i></button>
+                                <button class="sort-btn" data-sort="volume">검색량순 <i class="fa-solid fa-arrow-down-9-1"></i></button>
+                                <button class="sort-btn" data-sort="saturation">포화도순 <i class="fa-solid fa-arrow-down-1-9"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- 프리미엄 AI 성과 진단 테이블 보드 -->
+                        <div class="board-column glass-panel table-board" style="margin-top: 0;">
+                            <div class="board-content" style="padding: 0;">
                                 <div class="table-responsive">
-                                    <table class="premium-table">
+                                    <table class="premium-table" id="blog-diagnose-table">
                                         <thead>
                                             <tr>
-                                                <th>추천 연관 검색어</th>
-                                                <th>PC 검색량</th>
-                                                <th>모바일 검색량</th>
-                                                <th>월간 총합</th>
-                                                <th>예측 발행글</th>
-                                                <th>경쟁강도</th>
+                                                <th style="width: 10%;">분석일 / 발행일</th>
+                                                <th style="width: 32%;">포스트 정보</th>
+                                                <th style="width: 20%;">대표 키워드</th>
+                                                <th style="width: 14%;">검색량 / 포화도</th>
+                                                <th style="width: 10%;">통합검색 노출</th>
+                                                <th style="width: 8%;">AI 성과 (추천)</th>
+                                                <th style="width: 6%;">관리</th>
                                             </tr>
                                         </thead>
-                                        <tbody id="related-keywords-tbody">
-                                            <tr>
-                                                <td colspan="6" class="text-center">조회된 연관 검색어가 없습니다.</td>
-                                            </tr>
+                                        <tbody id="blog-diagnose-tbody">
+                                            <!-- 자바스크립트로 동적 수집된 데이터 렌더링 -->
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- 2.2. 우측 사이드바 영역 (출처, 가이드라인 체크리스트, 관련 질문) -->
-                    <div class="board-column-side">
-                        <!-- AEO 블로그 가점 가이드라인 체크리스트 (브랜드/병원 최적화 가이드 신규 추가) -->
-                        <div class="board-column glass-panel side-card aeo-prescription-card">
-                            <div class="board-header">
-                                <i class="fa-solid fa-notes-medical header-icon text-glow-purple"></i>
-                                <h2>AEO 블로그 노출 처방전</h2>
-                                <span class="category-badge" id="aeo-category-badge">일반 정보</span>
-                            </div>
-                            <div class="board-content">
-                                <p class="aeo-intro">이 키워드로 네이버 블로그 포스팅을 작성할 때, AI 브리핑에 채택 및 인용되기 위한 실무 가이드라인입니다.</p>
-                                <div class="aeo-checklist-wrapper" id="aeo-checklist">
-                                    <!-- 동적으로 추가될 체크리스트 목록 -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 출처 목록 카드 -->
-                        <div class="board-column glass-panel side-card">
-                            <div class="board-header">
-                                <i class="fa-solid fa-quote-left header-icon text-glow-blue"></i>
-                                <h2>인용 본문 출처 리스트</h2>
-                            </div>
-                            <div class="board-content" id="ai-sources-list">
-                                <div class="empty-state-small">인용된 출처가 존재하지 않습니다.</div>
-                            </div>
-                        </div>
-
-                        <!-- 관련 추천 질문 카드 -->
-                        <div class="board-column glass-panel side-card">
-                            <div class="board-header">
-                                <i class="fa-solid fa-circle-question header-icon text-glow-green"></i>
-                                <h2>AI 관련 질문 추천</h2>
-                            </div>
-                            <div class="board-content" id="ai-questions-list">
-                                <div class="empty-state-small">추천된 질문 리스트가 존재하지 않습니다.</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-            </div>
-        </main>
+            </main>
 
-        <!-- 하단 푸터 -->
-        <footer class="app-footer">
-            <p>&copy; 2026 미담공장 AX. All rights reserved. Powered by Naver Search Ad API.</p>
-        </footer>
+            <!-- 하단 푸터 -->
+            <footer class="app-footer">
+                <p>&copy; 2026 미담공장 AX. All rights reserved. Powered by Naver Search Ad API.</p>
+            </footer>
+        </div>
     </div>
     
     <!-- Custom JS (캐시 방지 버전 적용) -->
-    <script src="app.js?v=1.3"></script>
+    <script src="app.js?v=1.5"></script>
 </body>
 </html>
