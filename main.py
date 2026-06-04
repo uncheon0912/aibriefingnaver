@@ -937,17 +937,26 @@ async def get_blog_posts(blog_id: str = Query(..., description="네이버 블로
             pub_date_raw = clean_cdata(pub_date_match.group(1)) if pub_date_match else ""
             
             pub_date = pub_date_raw
+            iso_date = ""
             if pub_date_raw:
                 try:
                     parts = pub_date_raw.split()
                     if len(parts) >= 4:
                         day = parts[1]
                         month_str = parts[2]
+                        year = parts[3]
                         # 월 매핑
                         months = {"Jan":"01", "Feb":"02", "Mar":"03", "Apr":"04", "May":"05", "Jun":"06",
                                   "Jul":"07", "Aug":"08", "Sep":"09", "Oct":"10", "Nov":"11", "Dec":"12"}
                         month = months.get(month_str[:3], "01")
                         pub_date = f"{month}.{day}"
+                        
+                        try:
+                            day_int = int(day)
+                            year_int = int(year)
+                            iso_date = f"{year_int:04d}-{month}-{day_int:02d}"
+                        except:
+                            pass
                 except:
                     pass
             
@@ -957,7 +966,8 @@ async def get_blog_posts(blog_id: str = Query(..., description="네이버 블로
             posts.append({
                 "title": title,
                 "link": link,
-                "pub_date": pub_date
+                "pub_date": pub_date,
+                "iso_date": iso_date
             })
             
         return posts

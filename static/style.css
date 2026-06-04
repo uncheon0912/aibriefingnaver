@@ -1892,6 +1892,376 @@ body {
     }
 }
 
+/* ==========================================================================
+   추가: 기간 필터 드롭다운 및 통계 지표 차별화 스타일
+   ========================================================================== */
+.period-filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1rem;
+    border-radius: 100px;
+    transition: all 0.3s ease;
+}
+
+.period-filter-wrapper:focus-within {
+    border-color: var(--neon-purple);
+    box-shadow: 0 0 10px var(--neon-purple-glow);
+}
+
+.period-filter-wrapper .select-icon {
+    color: var(--neon-purple);
+    font-size: 0.9rem;
+}
+
+.premium-select {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    padding-right: 0.5rem;
+}
+
+.premium-select option {
+    background: #0d0a1b;
+    color: #ffffff;
+}
+
+/* 상단 지표 수치 차별화 및 가독성 업그레이드 */
+#stat-total-posts {
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    font-size: 2.8rem; /* 전체 포스트 강조 */
+}
+
+#stat-search-exposure {
+    color: var(--neon-blue);
+    text-shadow: 0 0 12px var(--neon-blue-glow);
+    font-size: 2.3rem;
+}
+
+#stat-ai-exposure {
+    color: var(--neon-purple);
+    text-shadow: 0 0 12px var(--neon-purple-glow);
+    font-size: 2.3rem;
+}
+
+#stat-ai-percent {
+    color: var(--neon-green);
+    text-shadow: 0 0 12px var(--neon-green-glow);
+    font-size: 2.6rem; /* 퍼센트 강력 강조 */
+}
+
+/* ==========================================================================
+   추가: AEO 상세 진단 팝업 모달 (프리미엄 유리 질감 다크 테마)
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(5, 3, 12, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 2rem;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hide {
+    display: none !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.premium-modal {
+    width: 100%;
+    max-width: 1100px;
+    max-height: 85vh;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 
+                0 0 40px rgba(123, 44, 191, 0.15);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: modalScaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    background: rgba(12, 8, 28, 0.95);
+}
+
+@keyframes modalScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.8rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.modal-header-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-align: left;
+}
+
+.modal-badge {
+    align-self: flex-start;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--neon-purple);
+    background: rgba(157, 78, 221, 0.12);
+    border: 1px solid rgba(157, 78, 221, 0.3);
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.modal-header-title h2 {
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.3;
+    margin: 0.2rem 0;
+}
+
+.modal-post-link-wrapper {
+    margin-top: 0.2rem;
+}
+
+.btn-modal-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--neon-blue);
+    text-decoration: none;
+    border: 1px solid rgba(0, 180, 216, 0.3);
+    background: rgba(0, 180, 216, 0.05);
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-link:hover {
+    background: var(--primary-grad);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(123, 44, 191, 0.3);
+}
+
+.modal-close-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+    background: rgba(255, 59, 48, 0.15);
+    border-color: var(--neon-red);
+    color: #ffffff;
+}
+
+.modal-body-layout {
+    display: flex;
+    padding: 1.8rem 2rem;
+    gap: 1.8rem;
+    flex: 1;
+    overflow: hidden;
+    height: 60vh;
+}
+
+.modal-column-left {
+    flex: 4.5;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    overflow-y: auto;
+}
+
+.modal-column-right {
+    flex: 5.5;
+    overflow: hidden;
+}
+
+.modal-sub-card {
+    padding: 1.25rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sub-card-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.6rem;
+    text-align: left;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sub-card-title i {
+    color: var(--neon-blue);
+}
+
+.modal-keyword-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    text-align: left;
+}
+
+.keyword-main-row {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.keyword-main-row .lbl {
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.keyword-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    padding: 0.85rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.keyword-stats-grid .stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.keyword-stats-grid .lbl {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+.keyword-stats-grid .val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.modal-table-container {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.condensed-table th, 
+.condensed-table td {
+    padding: 0.55rem 0.75rem !important;
+    font-size: 0.78rem !important;
+}
+
+.sub-card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.6rem;
+}
+
+.sub-card-header-flex .sub-card-title {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.exposure-status-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.exposure-status-badge.yes {
+    background: rgba(0, 180, 216, 0.15);
+    color: var(--neon-blue);
+    border: 1px solid var(--neon-blue);
+}
+
+.exposure-status-badge.no {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.modal-ai-briefing-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.modal-ai-briefing-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    text-align: left;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+}
+
+.modal-ai-briefing-scroll h4, 
+.modal-ai-briefing-scroll h3 {
+    color: #ffffff;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.modal-ai-briefing-scroll p {
+    margin-bottom: 0.75rem;
+}
+
 
 
 

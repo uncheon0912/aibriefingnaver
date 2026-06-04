@@ -163,10 +163,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const chipCountAiActive = document.getElementById("chip-count-ai-active");
     const chipCountAiRecommend = document.getElementById("chip-count-ai-recommend");
 
+    // [신규] 기간 필터 및 AEO 상세 진단 팝업 모달 엘리먼트 정의
+    const periodSelect = document.getElementById("period-select");
+    const aeoDetailModal = document.getElementById("aeo-detail-modal");
+    const modalPostTitle = document.getElementById("modal-post-title");
+    const modalPostLink = document.getElementById("modal-post-link");
+    const modalTargetKeyword = document.getElementById("modal-target-keyword");
+    const modalSearchVolume = document.getElementById("modal-search-volume");
+    const modalSaturationRate = document.getElementById("modal-saturation-rate");
+    const modalRelatedKeywordsTbody = document.getElementById("modal-related-keywords-tbody");
+    const modalAiExposureBadge = document.getElementById("modal-ai-exposure-badge");
+    const modalAiBriefingContent = document.getElementById("modal-ai-briefing-content");
+    const modalCloseBtn = document.getElementById("modal-close-btn");
+
     // 전역 상태 변수
     let currentBlogPosts = []; // 최근 수집된 블로그 포스팅 데이터 보존
     let activeFilter = "all";
     let activeSort = "date";
+    let activePeriod = "all";
 
     // 0. 사이드바 메뉴 탭 전환 바인딩
     menuKeywordAnalyzer.addEventListener("click", (e) => {
@@ -183,11 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
         menuKeywordAnalyzer.classList.remove("active");
         viewBlogDiagnose.classList.remove("hide");
         viewKeywordAnalyzer.classList.add("hide");
-        
-        // 블로그 뷰로 들어갔을 때, 아직 글 수집을 안 했다면 기본 ID로 자동 시작
-        if (currentBlogPosts.length === 0) {
-            triggerBlogAnalysis();
-        }
     });
 
     // 게스트 / 마스터 배지 처리용 엘리먼트
@@ -290,8 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const initialKeyword = urlParams.get("keyword");
             if (initialKeyword && menuKeywordAnalyzer.classList.contains("active")) {
                 performAnalysis(initialKeyword, false);
-            } else if (menuBlogDiagnose.classList.contains("active")) {
-                triggerBlogAnalysis();
             } else {
                 fetchAuthStatus();
             }
@@ -587,7 +594,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return val;
     }
 
-    // 포스트 제목에서 대표 키워드 추출용 규칙
+    // 포스트 제목에서 대표 키워드 추출용 규칙 (의문문 제외, 명사구 중심 추출)
     function extractRepresentativeKeyword(title, postUrl) {
         // F5 새로고침 또는 키워드 기억을 위해 localStorage 캐시 확인
         const cacheKey = `blog_kw_${postUrl}`;
@@ -595,26 +602,79 @@ document.addEventListener("DOMContentLoaded", () => {
         if (cached) return cached.trim();
 
         let cleanTitle = title.trim();
-        // 1. 대괄호 [...] 또는 중괄호 {...} 파싱
-        const bracketMatch = cleanTitle.match(/[\[\(\{]([^\]\)\}]+)[\]\)\}]/);
-        if (bracketMatch && bracketMatch[1].trim().length >= 2) {
-            return bracketMatch[1].trim();
-        }
 
-        // 2. 쉼표(,), 하이픈(-), 콜론(:) 구분 분석
-        const separatorMatch = cleanTitle.split(/[,:\-\|]/);
-        if (separatorMatch.length > 1 && separatorMatch[0].trim().length >= 2 && separatorMatch[0].trim().length <= 15) {
-            return separatorMatch[0].trim();
-        }
-
-        // 3. 앞의 1~2어절 추출
-        const words = cleanTitle.split(/\s+/);
-        if (words.length > 0) {
-            const firstTwo = words.slice(0, 2).join(" ");
-            if (firstTwo.length >= 2 && firstTwo.length <= 12) {
-                return firstTwo;
+        // 1. 따옴표나 대괄호 안의 핵심 텍스트가 있다면 최우선 고려
+        const quotesMatch = cleanTitle.match(/['"\[\(\{]([^'""\]\)\}]+)[建设项目'"\]\)\}]/);
+        if (quotesMatch && quotesMatch[1].trim().length >= 2 && quotesMatch[1].trim().length <= 15) {
+            const kwCandidate = quotesMatch[1].trim();
+            if (!/[?？]/.test(kwCandidate)) {
+                return kwCandidate;
             }
-            return words[0].substring(0, 10);
+        }
+
+        // 2. 제목 정제 및 토큰화
+        let textForToken = cleanTitle.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()\[\]]/g, " ");
+        let tokens = textForToken.split(/\s+/).map(t => t.trim()).filter(t => t.length >= 2);
+
+        // 조사를 떼어내는 규칙 (명사 추출을 위한 어미 정제)
+        function cleanJosa(word) {
+            const josas = ["은", "는", "이", "가", "을", "를", "의", "에", "에서", "으로", "로", "와", "과", "도", "만", "시", "때", "한", "된", "할", "하는", "하기", "하나요", "인가요"];
+            for (let josa of josas) {
+                if (word.endsWith(josa) && word.length > josa.length) {
+                    return word.slice(0, -josa.length);
+                }
+            }
+            return word;
+        }
+
+        // 불용어 목록 (의문사, 동사구 등 키워드가 될 수 없는 단어들)
+        const stopWords = [
+            "이유", "이유는", "이유를", "원인", "방법", "추천", "의문", "무엇", "어떻게", "왜", "느낀", "느낀것은", "중요한", "알고", 
+            "먹어야", "진짜", "보약", "풍부한", "꿀조합", "대부분", "갈립니다", "지적되는", "문구는", "존재할까", "때문일까", "있을까", 
+            "어떨까", "하나요", "할까", "아십니까", "인가요", "중요한가", "알어보아요", "알아보아요", "알아보자", "가이드", "총정리", "주의할", "소개"
+        ];
+
+        let validNouns = [];
+        for (let t of tokens) {
+            let noun = cleanJosa(t);
+            noun = cleanJosa(noun); // 조사가 2중 결합된 형태 제거
+
+            if (noun.length >= 2 && !stopWords.includes(noun) && !/[?？!！]/.test(noun)) {
+                validNouns.push(noun);
+            }
+        }
+
+        // 3. 네이버 키워드에 근거한 명사 조합 분석 규칙
+        if (validNouns.length > 0) {
+            if (validNouns.includes("사과") && validNouns.includes("보관법")) {
+                return "사과 보관법";
+            }
+            if (validNouns.includes("사과") && validNouns.includes("효능")) {
+                return "사과 효능";
+            }
+            if (validNouns.includes("의료광고심의") && validNouns.includes("블로그")) {
+                return "블로그 의료광고심의";
+            }
+            if (validNouns.includes("병원") && validNouns.includes("블로그")) {
+                if (validNouns.includes("포스팅")) return "병원 블로그 포스팅";
+                return "병원 블로그";
+            }
+            if (validNouns.includes("손목터널증후군")) {
+                return "손목터널증후군";
+            }
+            if (validNouns.includes("기미") && validNouns.includes("레이저")) {
+                return "레이저 기미";
+            }
+            if (validNouns.includes("재활의학과") && validNouns.includes("블로그")) {
+                return "재활의학과 블로그 마케팅";
+            }
+
+            if (validNouns.length >= 3) {
+                return validNouns.slice(0, 3).join(" ");
+            } else if (validNouns.length >= 2) {
+                return validNouns.slice(0, 2).join(" ");
+            }
+            return validNouns[0];
         }
 
         return "네이버 블로그";
@@ -760,6 +820,19 @@ document.addEventListener("DOMContentLoaded", () => {
             if (activeFilter === "ai-recommend") return p.ai_status === "추천";
             return true;
         });
+
+        // 기간 필터 적용
+        if (activePeriod !== "all") {
+            const daysLimit = parseInt(activePeriod);
+            const now = new Date();
+            filtered = filtered.filter(p => {
+                if (!p.iso_date) return false;
+                const pDate = new Date(p.iso_date);
+                const diffTime = Math.abs(now - pDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays <= daysLimit;
+            });
+        }
 
         // 정렬 적용
         filtered.sort((a, b) => {
@@ -934,30 +1007,156 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // 2. 상세보기 점프 바인딩
+        // 2. 상세보기 팝업 모달 정밀 진단 연동
         const detailBtn = row.querySelector(".btn-detail-go");
         if (detailBtn) {
-            detailBtn.addEventListener("click", () => {
-                const clickKw = detailBtn.getAttribute("data-keyword");
+            detailBtn.addEventListener("click", async () => {
+                const post = currentBlogPosts[index];
                 
-                // 기존 키워드 분석 탭 뷰로 전환하고 즉시 분석 구동
-                menuKeywordAnalyzer.click();
-                keywordInput.value = clickKw;
-                performAnalysis(clickKw, true);
+                // 모달 텍스트 및 기본 구조 로딩 매핑
+                modalPostTitle.textContent = post.title;
+                modalPostLink.href = post.link;
+                modalTargetKeyword.textContent = post.keyword;
+                
+                aeoDetailModal.classList.remove("hide");
+                
+                modalSearchVolume.textContent = "-";
+                modalSaturationRate.textContent = "-";
+                modalAiExposureBadge.className = "exposure-status-badge no";
+                modalAiExposureBadge.textContent = "진단 중...";
+                modalRelatedKeywordsTbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center">
+                            <i class="fa-solid fa-spinner fa-spin"></i> 실시간 연관검색어를 분석하고 있습니다...
+                        </td>
+                    </tr>
+                `;
+                modalAiBriefingContent.innerHTML = `
+                    <div class="empty-state" style="padding: 3rem 0;">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--neon-purple); margin-bottom: 0.8rem;"></i>
+                        <p>네이버 실시간 AI 브리핑 본문을 분석하고 있습니다...</p>
+                    </div>
+                `;
+                
+                const token = sessionStorage.getItem("mydamgong_token");
+                
+                try {
+                    const response = await fetch(`/api/analyze?keyword=${encodeURIComponent(post.keyword)}&token=${encodeURIComponent(token)}`);
+                    
+                    if (response.status === 429) {
+                        const errData = await response.json();
+                        throw new Error(errData.detail || "검색 제한이 초과되었습니다.");
+                    }
+                    if (!response.ok) {
+                        throw new Error("실시간 진단 데이터를 불러올 수 없습니다.");
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // 검색량 및 포화도 매핑
+                    modalSearchVolume.textContent = data.search_volume.total > 0 ? `${data.search_volume.total.toLocaleString()}회` : "0회";
+                    modalSaturationRate.textContent = `${data.competition.saturation_rate}% (${data.competition.level})`;
+                    
+                    // AI 브리핑 상태 및 본문
+                    if (data.ai_briefing.active) {
+                        modalAiExposureBadge.className = "exposure-status-badge yes";
+                        modalAiExposureBadge.textContent = "AI 브리핑 노출 중";
+                        modalAiBriefingContent.innerHTML = `
+                            <div class="ai-answer-container" style="font-size: 0.85rem; line-height: 1.65;">
+                                ${data.ai_briefing.answer}
+                            </div>
+                        `;
+                    } else {
+                        modalAiExposureBadge.className = "exposure-status-badge no";
+                        modalAiExposureBadge.textContent = "AI 브리핑 미노출";
+                        modalAiBriefingContent.innerHTML = `
+                            <div class="empty-state" style="padding: 3rem 0;">
+                                <i class="fa-solid fa-circle-info" style="font-size: 1.5rem; margin-bottom: 0.6rem;"></i>
+                                <p>${data.ai_briefing.message || "해당 키워드는 네이버 AI 브리핑 정보가 나타나지 않습니다."}</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // 연관 키워드 Top 8
+                    if (data.related_keywords && data.related_keywords.length > 0) {
+                        let tbodyHtml = "";
+                        data.related_keywords.forEach(rk => {
+                            const totStr = rk.total > 0 ? rk.total.toLocaleString() : "-";
+                            tbodyHtml += `
+                                <tr>
+                                    <td style="font-weight: 600; color: var(--neon-blue);">${rk.keyword}</td>
+                                    <td>${totStr}회</td>
+                                    <td>${rk.doc_count.toLocaleString()}건</td>
+                                    <td><span class="badge-level ${rk.level}" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">${rk.level}</span></td>
+                                </tr>
+                            `;
+                        });
+                        modalRelatedKeywordsTbody.innerHTML = tbodyHtml;
+                    } else {
+                        modalRelatedKeywordsTbody.innerHTML = `<tr><td colspan="4" class="text-center">연관 검색어가 없습니다.</td></tr>`;
+                    }
+                    
+                    // 게스트인 경우 횟수 업데이트
+                    if (data.guest_info && document.getElementById("guest-count")) {
+                        document.getElementById("guest-count").textContent = data.guest_info.remaining;
+                    }
+                    
+                } catch(err) {
+                    modalAiExposureBadge.className = "exposure-status-badge no";
+                    modalAiExposureBadge.textContent = "진단 실패";
+                    modalAiBriefingContent.innerHTML = `
+                        <div class="empty-state" style="color: var(--neon-red); padding: 3rem 0;">
+                            <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; margin-bottom: 0.6rem;"></i>
+                            <p>${err.message || "실시간 AEO 진단 도중 실패했습니다."}</p>
+                        </div>
+                    `;
+                    modalRelatedKeywordsTbody.innerHTML = `<tr><td colspan="4" class="text-center" style="color:var(--text-secondary);">데이터 조회 실패</td></tr>`;
+                }
             });
         }
     }
 
     // 상단 통계 수치 연산 및 실시간 렌더링
     function calculateBlogStats() {
-        const total = currentBlogPosts.length;
-        if (total === 0) return;
+        let targetPosts = currentBlogPosts;
+        
+        // 기간 필터 반영
+        if (activePeriod !== "all") {
+            const daysLimit = parseInt(activePeriod);
+            const now = new Date();
+            targetPosts = targetPosts.filter(p => {
+                if (!p.iso_date) return false;
+                const pDate = new Date(p.iso_date);
+                const diffTime = Math.abs(now - pDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays <= daysLimit;
+            });
+        }
+
+        const total = targetPosts.length;
+        if (total === 0) {
+            // 통계 수치 리셋
+            chipCountAll.textContent = 0;
+            chipCountSearchOnly.textContent = 0;
+            chipCountAiActive.textContent = 0;
+            chipCountAiRecommend.textContent = 0;
+            statTotalPosts.textContent = 0;
+            statSearchExposure.textContent = "0/0";
+            statSearchPercent.textContent = "0% 노출";
+            statAiExposure.textContent = 0;
+            statAiPercent.textContent = "0%";
+            distBarAi.style.width = "0%";
+            distBarSearch.style.width = "0%";
+            distCountAi.textContent = "0% (0)";
+            distCountSearch.textContent = "0% (0)";
+            return;
+        }
 
         let searchCount = 0;
         let aiCount = 0;
         let aiActiveCount = 0;
 
-        currentBlogPosts.forEach(p => {
+        targetPosts.forEach(p => {
             if (p.exposure === "O") searchCount++;
             if (p.ai_status === "추천") aiCount++;
             if (p.ai_status === "추천" || p.ai_status === "미추천") aiActiveCount++;
@@ -1054,4 +1253,27 @@ document.addEventListener("DOMContentLoaded", () => {
             history.replaceState({ keyword: "" }, "", window.location.search);
         }
     }
+
+    // 4. 기간 필터 드롭다운 체인지 바인딩
+    if (periodSelect) {
+        periodSelect.addEventListener("change", () => {
+            activePeriod = periodSelect.value;
+            renderBlogTable();
+            calculateBlogStats();
+        });
+    }
+
+    // 5. AEO 상세 분석 모달 닫기 바인딩
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener("click", () => {
+            aeoDetailModal.classList.add("hide");
+        });
+    }
+
+    // 바깥 영역 클릭 시 닫기
+    window.addEventListener("click", (e) => {
+        if (e.target === aeoDetailModal) {
+            aeoDetailModal.classList.add("hide");
+        }
+    });
 });

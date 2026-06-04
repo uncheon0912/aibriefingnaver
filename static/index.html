@@ -281,7 +281,7 @@
                         <form id="blog-form" class="search-form">
                             <div class="input-wrapper">
                                 <i class="fa-brands fa-blogger search-icon"></i>
-                                <input type="text" id="blog-input" placeholder="네이버 블로그 주소 또는 ID 입력 (예: qnfehrvkxmsj)" value="https://blog.naver.com/qnfehrvkxmsj" required autocomplete="off">
+                                <input type="text" id="blog-input" placeholder="네이버 블로그 주소 또는 ID 입력 (예: qnfehrvkxmsj)" required autocomplete="off">
                             </div>
                             <button type="submit" class="btn-submit">
                                 <span>글 수집 & 진단</span>
@@ -347,6 +347,18 @@
                                 <button class="chip" data-filter="ai-active">AI 브리핑 노출 <span id="chip-count-ai-active">0</span></button>
                                 <button class="chip" data-filter="ai-recommend">AI 추천 <span id="chip-count-ai-recommend">0</span></button>
                             </div>
+                            
+                            <!-- 추가: 기간 필터 드롭다운 -->
+                            <div class="period-filter-wrapper">
+                                <i class="fa-solid fa-calendar-days select-icon"></i>
+                                <select id="period-select" class="premium-select">
+                                    <option value="all" selected>전체 기간</option>
+                                    <option value="7">최근 7일</option>
+                                    <option value="30">최근 30일</option>
+                                    <option value="90">최근 90일</option>
+                                </select>
+                            </div>
+
                             <div class="sort-controls">
                                 <button class="sort-btn active" data-sort="date">최신순 <i class="fa-solid fa-arrow-down-short-wide"></i></button>
                                 <button class="sort-btn" data-sort="volume">검색량순 <i class="fa-solid fa-arrow-down-9-1"></i></button>
@@ -388,6 +400,87 @@
         </div>
     </div>
     
+    <!-- AEO 실시간 상세 분석 팝업 모달 -->
+    <div id="aeo-detail-modal" class="modal-overlay hide">
+        <div class="modal-card glass-panel premium-modal">
+            <div class="modal-header">
+                <div class="modal-header-title">
+                    <span class="modal-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> AEO 실시간 정밀 진단</span>
+                    <h2 id="modal-post-title">포스트 제목</h2>
+                    <div class="modal-post-link-wrapper">
+                        <a href="#" target="_blank" id="modal-post-link" class="btn-modal-link">
+                            <span>포스팅 보기</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </div>
+                </div>
+                <button id="modal-close-btn" class="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="modal-body-layout">
+                <!-- 좌측 컬럼: 핵심 지표 및 연관키워드 -->
+                <div class="modal-column-left">
+                    <div class="modal-sub-card glass-panel">
+                        <h3 class="sub-card-title"><i class="fa-solid fa-key"></i> 타겟 키워드 분석</h3>
+                        <div class="modal-keyword-summary">
+                            <div class="keyword-main-row">
+                                <span class="lbl">선정 키워드:</span>
+                                <span class="val text-glow-blue" id="modal-target-keyword">-</span>
+                            </div>
+                            <div class="keyword-stats-grid">
+                                <div class="stat-item">
+                                    <span class="lbl">월간 검색량</span>
+                                    <span class="val" id="modal-search-volume">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="lbl">경쟁 포화도</span>
+                                    <span class="val" id="modal-saturation-rate">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-sub-card glass-panel flex-grow-1">
+                        <h3 class="sub-card-title"><i class="fa-solid fa-table-list"></i> 실시간 연관 키워드 (Top 8)</h3>
+                        <div class="table-responsive modal-table-container">
+                            <table class="premium-table condensed-table">
+                                <thead>
+                                    <tr>
+                                        <th>연관 키워드</th>
+                                        <th>총 검색량</th>
+                                        <th>발행량</th>
+                                        <th>경쟁도</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modal-related-keywords-tbody">
+                                    <tr>
+                                        <td colspan="4" class="text-center">연관 검색어 로딩 중...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 우측 컬럼: AI 브리핑 실시간 분석 및 노출 여부 -->
+                <div class="modal-column-right">
+                    <div class="modal-sub-card glass-panel h-100 flex-column">
+                        <div class="sub-card-header-flex">
+                            <h3 class="sub-card-title"><i class="fa-solid fa-robot"></i> 네이버 AI 브리핑 분석</h3>
+                            <span class="exposure-status-badge" id="modal-ai-exposure-badge">미노출</span>
+                        </div>
+                        <div class="modal-ai-briefing-scroll" id="modal-ai-briefing-content">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                <p>네이버 실시간 AI 브리핑 데이터를 진단하고 있습니다...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom JS (캐시 방지 버전 적용) -->
     <script src="app.js?v=1.6"></script>
 </body>
