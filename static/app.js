@@ -917,7 +917,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </td>
                 <td>
                     <div class="keyword-cell-wrapper" id="kw-cell-${index}">
-                        <span class="kw-text" style="font-weight: 600; color: var(--neon-blue);">${p.keyword}</span>
+                        <span class="kw-text clickable-kw" data-keyword="${p.keyword}" style="font-weight: 600; color: var(--neon-blue); cursor: pointer;" title="클릭 시 키워드 진단기로 즉시 이동 및 분석">${p.keyword}</span>
                         <button class="edit-keyword-btn" data-index="${index}"><i class="fa-solid fa-pen"></i></button>
                     </div>
                 </td>
@@ -1007,7 +1007,18 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // 2. 상세보기 팝업 모달 정밀 진단 연동
+        // 2. 대표 키워드 텍스트 클릭 시 키워드 진단기 탭으로 스위칭 및 자동 분석 시작 (RSS 수집 데이터는 그대로 보존됨)
+        const kwText = row.querySelector(".kw-text.clickable-kw");
+        if (kwText) {
+            kwText.addEventListener("click", () => {
+                const clickKw = kwText.getAttribute("data-keyword");
+                menuKeywordAnalyzer.click();
+                keywordInput.value = clickKw;
+                performAnalysis(clickKw, true);
+            });
+        }
+
+        // 3. 상세보기 팝업 모달 정밀 진단 연동 (AI 브리핑 내 이미지 썸네일 및 출처 링크 새창 연결 포함)
         const detailBtn = row.querySelector(".btn-detail-go");
         if (detailBtn) {
             detailBtn.addEventListener("click", async () => {
@@ -1061,11 +1072,70 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (data.ai_briefing.active) {
                         modalAiExposureBadge.className = "exposure-status-badge yes";
                         modalAiExposureBadge.textContent = "AI 브리핑 노출 중";
-                        modalAiBriefingContent.innerHTML = `
+                        
+                        let briefingHtml = `
                             <div class="ai-answer-container" style="font-size: 0.85rem; line-height: 1.65;">
                                 ${data.ai_briefing.answer}
                             </div>
                         `;
+
+                        // 인용 썸네일 이미지 동적 렌더링 (새 창 이동 target="_blank" 포함)
+                        if (data.ai_briefing.multimedia && data.ai_briefing.multimedia.length > 0) {
+                            briefingHtml += `
+                                <div class="modal-multimedia-section" style="margin-top: 1.8rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:1.2rem;">
+                                    <h4 style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-bottom:0.85rem; display:flex; align-items:center; gap:0.4rem; border-bottom:none; padding-bottom:0;">
+                                        <i class="fa-solid fa-images" style="color:var(--neon-purple);"></i> 인용 썸네일 이미지 (클릭 시 이동)
+                                    </h4>
+                                    <div class="thumbnail-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem;">
+                            `;
+                            data.ai_briefing.multimedia.forEach(item => {
+                                briefingHtml += `
+                                    <a href="${item.url}" target="_blank" class="thumbnail-card" style="border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; background:rgba(0,0,0,0.25); text-decoration:none;" title="클릭하여 원본 이미지 문서 확인">
+                                        <div class="thumbnail-img-wrapper" style="height: 85px; position:relative; overflow:hidden;">
+                                            <img src="${item.thumbnail_url}" alt="${item.title}" class="thumbnail-img" style="width:100%; height:100%; object-fit:cover; transition:transform 0.3s ease;" loading="lazy" referrerpolicy="no-referrer">
+                                            <span class="thumbnail-platform-badge" style="font-size:0.58rem; padding:0.1rem 0.35rem; position:absolute; top:4px; left:4px; border-radius:4px; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.1); color:var(--neon-purple);">${item.platform}</span>
+                                        </div>
+                                        <div class="thumbnail-content" style="padding:0.45rem; flex:1; display:flex; flex-direction:column; justify-content:center;">
+                                            <span class="thumbnail-title" style="font-size:0.7rem; -webkit-line-clamp:2; height:2.4em; display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; color:#ffffff; font-weight:600; line-height:1.25; border-bottom:none; padding-bottom:0;">${item.title}</span>
+                                        </div>
+                                    </a>
+                                `;
+                            });
+                            briefingHtml += `
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        // 인용 출처 리스트 동적 렌더링 (새 창 이동 target="_blank" 적용)
+                        if (data.ai_briefing.sources && data.ai_briefing.sources.length > 0) {
+                            briefingHtml += `
+                                <div class="modal-sources-section" style="margin-top: 1.8rem; border-top:1px solid rgba(255,255,255,0.05); padding-top:1.2rem;">
+                                    <h4 style="font-size:0.85rem; font-weight:700; color:#ffffff; margin-bottom:0.85rem; display:flex; align-items:center; gap:0.4rem; border-bottom:none; padding-bottom:0;">
+                                        <i class="fa-solid fa-quote-left" style="color:var(--neon-blue);"></i> 인용 본문 출처 리스트 (새창 이동)
+                                    </h4>
+                                    <div class="source-list-wrapper" style="display:flex; flex-direction:column; gap:0.55rem;">
+                            `;
+                            data.ai_briefing.sources.forEach(src => {
+                                const descStr = src.description ? src.description : "출처 정보 페이지 링크";
+                                briefingHtml += `
+                                    <a href="${src.url}" target="_blank" class="source-item" style="display:flex; align-items:center; gap:0.75rem; text-decoration:none; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:0.5rem 0.8rem; border-radius:8px; transition: background 0.2s ease;" title="클릭하여 원본 출처 확인">
+                                        <span class="source-num" style="width:20px; height:20px; border-radius:50%; background:var(--neon-purple); color:#ffffff; display:flex; justify-content:center; align-items:center; font-size:0.65rem; font-weight:700;">${src.index}</span>
+                                        <div class="source-info-wrapper" style="display:flex; flex-direction:column; gap:0.15rem; flex:1; text-align:left; overflow:hidden;">
+                                            <span class="source-name" style="font-size:0.75rem; font-weight:700; color:#ffffff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${src.name}</span>
+                                            <span class="source-desc" style="font-size:0.68rem; color:var(--text-secondary); opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">${descStr}</span>
+                                        </div>
+                                        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.7rem; color:var(--text-secondary); opacity:0.6;"></i>
+                                    </a>
+                                `;
+                            });
+                            briefingHtml += `
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        modalAiBriefingContent.innerHTML = briefingHtml;
                     } else {
                         modalAiExposureBadge.className = "exposure-status-badge no";
                         modalAiExposureBadge.textContent = "AI 브리핑 미노출";

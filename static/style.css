@@ -1971,9 +1971,10 @@ body {
     -webkit-backdrop-filter: blur(12px);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* 화면 확대 시 상단 잘림 방지를 위해 flex-start와 padding 조합 */
     z-index: 9999;
-    padding: 2rem;
+    padding: 2rem 1rem;
+    overflow-y: auto; /* 화면보다 모달이 커지면 바깥 브라우저 스크롤 활성화 */
     transition: opacity 0.3s ease;
 }
 
@@ -1986,7 +1987,8 @@ body {
 .premium-modal {
     width: 100%;
     max-width: 1100px;
-    max-height: 85vh;
+    max-height: 90vh; /* 높이 제한 살짝 상향 */
+    margin: auto 0; /* 세로 중앙 정렬 및 스크롤 안정화 */
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 
                 0 0 40px rgba(123, 44, 191, 0.15);
@@ -2102,7 +2104,9 @@ body {
     gap: 1.8rem;
     flex: 1;
     overflow: hidden;
-    height: 60vh;
+    height: auto;
+    min-height: 250px;
+    max-height: 70vh; /* 브라우저 확대 시 유동적 비율 축소 대응 */
 }
 
 .modal-column-left {
