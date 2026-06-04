@@ -965,7 +965,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </td>
                 <td>
                     <div class="keyword-cell-wrapper" id="kw-cell-${index}">
-                        <span class="kw-text clickable-kw" data-keyword="${p.keyword}" style="font-weight: 600; color: var(--neon-blue); cursor: pointer;" title="클릭 시 키워드 진단기로 즉시 이동 및 분석">${p.keyword}</span>
+                        <span class="kw-text clickable-kw" data-keyword="${p.keyword}" title="클릭 시 키워드 진단기로 즉시 이동 및 분석">${p.keyword}</span>
                         <button class="edit-keyword-btn" data-index="${index}"><i class="fa-solid fa-pen"></i></button>
                     </div>
                 </td>

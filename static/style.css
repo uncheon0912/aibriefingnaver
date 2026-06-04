@@ -2318,6 +2318,28 @@ body {
     box-shadow: 0 4px 12px rgba(123, 44, 191, 0.45), 0 0 8px var(--neon-purple-glow);
 }
 
+/* 대표 키워드 텍스트 노란색(네온 옐로우) 테마 스타일링 */
+.kw-text {
+    font-weight: 600;
+    color: #ffd166 !important; /* 대표 키워드 프리미엄 네온 옐로우 */
+    text-shadow: 0 0 6px rgba(255, 209, 102, 0.2);
+}
+
+.kw-text.clickable-kw {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 209, 102, 0.4);
+    text-underline-offset: 3px;
+    transition: all 0.25s ease;
+}
+
+.kw-text.clickable-kw:hover {
+    color: #ffffff !important;
+    text-shadow: 0 0 12px #ffd166, 0 0 20px rgba(255, 209, 102, 0.6);
+    text-decoration-color: #ffffff;
+}
+
+
 
 
 
