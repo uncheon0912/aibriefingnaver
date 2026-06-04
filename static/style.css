@@ -2120,6 +2120,8 @@ body {
 .modal-column-right {
     flex: 5.5;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-sub-card {
@@ -2130,6 +2132,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .sub-card-title {
@@ -2246,6 +2250,7 @@ body {
 
 .modal-ai-briefing-scroll {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding-right: 0.5rem;
     text-align: left;
