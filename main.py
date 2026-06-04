@@ -928,7 +928,18 @@ async def get_blog_posts(
             if response.status_code != 200:
                 continue
             
-            data = response.json()
+            try:
+                data = response.json()
+            except Exception:
+                try:
+                    import json
+                    # JSON 이스케이프 표준 규격에 맞지 않는 홑 백슬래시(\)를 이중 백슬래시(\\)로 정제
+                    clean_text = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', response.text)
+                    data = json.loads(clean_text, strict=False)
+                except Exception as json_err:
+                    print(f"네이버 JSON 최종 파싱 실패: {json_err}")
+                    continue
+            
             if data.get("resultCode") != "S":
                 continue
                 
