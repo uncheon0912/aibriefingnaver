@@ -1768,6 +1768,9 @@ document.addEventListener("DOMContentLoaded", () => {
             blogId = blogId.replace(/https?:\/\//g, "").split("/")[0] === "m.blog.naver.com" ? rawVal.split("/")[3] || blogId : blogId;
             blogId = blogId.trim();
 
+            // 인증 토큰 로드
+            const token = sessionStorage.getItem("mydamgong_token") || "";
+
             // UI 초기화
             blogIndexSpinner.classList.remove("hide");
             blogIndexLoadingState.classList.remove("hide");
