@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>블랭블랭 - 네이버 AI 브리핑 & AEO 실시간 키워드 진단기</title>
+    <title>블랭블 - 네이버 AI 브리핑 & AEO 실시간 키워드 진단기</title>
     <meta name="description" content="네이버 AI 브리핑(Generative Search) 노출 진단, 검색량 수집, 포화도 예측 및 AEO 분석을 한 번에 제공하는 프리미엄 지능형 검색 마케팅 분석기입니다.">
     <!-- Google Fonts Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,7 +26,7 @@
                 <div class="auth-icon-circle purple-neon">
                     <i class="fa-solid fa-lock"></i>
                 </div>
-                <h2>블랭블랭 인증</h2>
+                <h2>블랭블 인증</h2>
                 <p>대시보드 접속을 위해 부여받은 비밀번호를 입력해 주세요.</p>
             </div>
             <form id="auth-form" class="auth-form">
@@ -49,7 +49,7 @@
         <aside class="app-sidebar glass-panel">
             <div class="sidebar-logo" id="logo-btn">
                 <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
-                <span class="logo-text">블랭블랭</span>
+                <span class="logo-text">블랭블</span>
             </div>
             
             <nav class="sidebar-menu">
@@ -308,6 +308,26 @@
                     <div id="blog-result-section" class="blog-result-section hide">
                         <!-- 상단 성과 통계 지표 카드 -->
                         <div class="blog-stats-grid">
+                            <!-- 신규: AEO 종합 성과 점수 SVG 원형 게이지 카드 -->
+                            <div class="stat-card glass-panel" style="align-items: center; justify-content: center; padding: 1.2rem 1.5rem;">
+                                <span class="stat-label" style="margin-bottom: 0.5rem; white-space: nowrap;">AEO 종합 성과 점수</span>
+                                <div class="score-circle-wrapper" style="width: 110px; height: 110px; margin-bottom: 0; display: flex; justify-content: center; align-items: center;">
+                                    <svg class="progress-ring" width="110" height="110">
+                                        <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="8" fill="transparent" r="45" cx="55" cy="55"/>
+                                        <circle class="progress-ring__circle" id="aeo-score-ring" stroke="url(#aeo-neon-grad)" stroke-width="8" fill="transparent" r="45" cx="55" cy="55" stroke-dasharray="282.74" stroke-dashoffset="282.74"/>
+                                        <defs>
+                                            <linearGradient id="aeo-neon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stop-color="#00f5d4" />
+                                                <stop offset="100%" stop-color="#7b2cbf" />
+                                            </linearGradient>
+                                        </defs>
+                                    </svg>
+                                    <div class="score-content" style="position: absolute;">
+                                        <span class="score-number" id="aeo-score-num" style="font-size: 1.6rem; font-weight: 800; text-shadow: 0 0 10px rgba(0, 245, 212, 0.4);">0</span>
+                                        <span class="score-grade" id="aeo-grade-text" style="font-size: 0.65rem; font-weight: 700; color: #00f5d4; text-shadow: 0 0 5px rgba(0, 245, 212, 0.4); margin-top: 0.1rem;">미진단</span>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="stat-card glass-panel">
                                 <span class="stat-label">전체 분석 포스트</span>
                                 <h2 class="stat-value" id="stat-total-posts">0</h2>
@@ -328,7 +348,7 @@
                                 <h2 class="stat-value text-glow-green" id="stat-ai-percent">0%</h2>
                                 <span class="stat-sub">인용 성공 확률</span>
                             </div>
-                            <div class="stat-card glass-panel span-2-col">
+                            <div class="stat-card glass-panel span-3-col">
                                 <span class="stat-label">카테고리별 AI 추천 분포</span>
                                 <div class="category-distribution-wrapper">
                                     <div class="dist-bar-container">
@@ -451,7 +471,7 @@
                                     <div class="profile-avatar-container">
                                         <img id="blog-profile-img" src="https://ssl.pstatic.net/static/blog/img/profile/profile_default_90.png" alt="프로필 이미지" referrerpolicy="no-referrer">
                                     </div>
-                                    <h3 id="blog-nickname">머니라함의 블랭블랭</h3>
+                                    <h3 id="blog-nickname">머니라함의 블랭블</h3>
                                     <span class="category-badge" id="blog-directory">건강·의학</span>
                                 </div>
                                 <div class="profile-meta-list">
@@ -595,7 +615,7 @@
 
             <!-- 하단 푸터 -->
             <footer class="app-footer">
-                <p>&copy; 2026 블랭블랭. All rights reserved. Powered by Naver Search Ad API.</p>
+                <p>&copy; 2026 블랭블. All rights reserved. Powered by Naver Search Ad API.</p>
             </footer>
         </div>
     
@@ -746,7 +766,7 @@
             
             <div style="display: flex; align-items: center; gap: 0.6rem; font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; color: #ffffff;">
                 <i class="fa-solid fa-wand-magic-sparkles" style="color: #9d4edd;"></i>
-                <span>블랭블랭</span>
+                <span>블랭블</span>
             </div>
             
             <div style="margin-top: 2rem; text-align: left; z-index: 10;">
@@ -765,7 +785,7 @@
                     <div><strong style="color: #ffffff; margin-right: 0.5rem;">진단 일자:</strong> <span id="pdf-report-date" style="color: #ffffff;">-</span></div>
                 </div>
                 <div style="text-align: right;">
-                    <strong style="color: #ffffff;">발행처:</strong> 블랭블랭 지능형 마케팅 전략 연구소
+                    <strong style="color: #ffffff;">발행처:</strong> 블랭블 지능형 마케팅 전략 연구소
                 </div>
             </div>
         </div>
@@ -775,7 +795,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.2rem;">
                     <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">01. 현황 진단 및 종합 평가 (Performance & General Review)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 리포트</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블 AEO 리포트</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 1.5rem;">귀사 브랜드 블로그 AEO 노출 성과 지표</h2>
@@ -815,7 +835,7 @@
                             네이버 생성형 검색(AI 브리핑) 도입 이후, 사용자 검색 행태는 단순 키워드 매칭에서 구체적 질문으로 변모하고 있습니다. 현재 귀사 블로그의 최적화 수준은 미흡(C-Grade) 수준으로 스캔되어, 경쟁사 대비 추천 노출 경쟁력이 현격히 저하된 원인을 긴급 진단 및 보완해야 합니다.
                         </div>
                         <p style="font-size: 0.78rem; color: #777777; line-height: 1.5; margin: 0;">
-                            * 본 평가는 블랭블랭 지능형 검색 최적화 기술연구소의 특허받은 인텐트 채택 분석 기준 및 HyperCLOVA X 정보 추출 가독성 지표를 종합 합산하여 동적으로 판정되었습니다.
+                            * 본 평가는 블랭블 지능형 검색 최적화 기술연구소의 특허받은 인텐트 채택 분석 기준 및 HyperCLOVA X 정보 추출 가독성 지표를 종합 합산하여 동적으로 판정되었습니다.
                         </p>
                     </div>
                 </div>
@@ -832,7 +852,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">
                     <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">02. 세부 포스팅 분석 매트릭스 (Detailed Diagnostics Matrix)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 리포트</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블 AEO 리포트</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 0.8rem;">귀사 포스팅별 AI 브리핑 스캔 결과</h2>
@@ -871,7 +891,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">
                     <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">03. AI 노출 저해요인 및 병목 진단 (Deep Bottleneck Analysis)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 리포트</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블 AEO 리포트</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 0.8rem;">귀사 콘텐츠의 AI 검색 로봇 수집 병목 요인</h2>
@@ -910,7 +930,7 @@
                                 <th style="padding: 0.5rem; color: #495057; width: 25%;">알고리즘 평가 기준</th>
                                 <th style="padding: 0.5rem; color: #495057; width: 45%;">핵심 평가 항목</th>
                                 <th style="padding: 0.5rem; color: #ff3b30; width: 15%; text-align: center;">귀사 블로그 평점</th>
-                                <th style="padding: 0.5rem; color: #38b000; width: 15%; text-align: center;">블랭블랭 기준</th>
+                                <th style="padding: 0.5rem; color: #38b000; width: 15%; text-align: center;">블랭블 기준</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -943,15 +963,15 @@
             </div>
         </div>
 
-        <!-- Page 5: 블랭블랭 도입 전후 비교 및 성과 모델 (Performance Gap Analysis) -->
+        <!-- Page 5: 블랭블 도입 전후 비교 및 성과 모델 (Performance Gap Analysis) -->
         <div class="pdf-page" id="pdf-page-5" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.2rem;">
-                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">04. 블랭블랭 도입 전후 비교 및 성과 모델 (Performance Gap Analysis)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 제안서</span>
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">04. 블랭블 도입 전후 비교 및 성과 모델 (Performance Gap Analysis)</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블 AEO 제안서</span>
                 </div>
                 
-                <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 1rem;">블랭블랭 최적화 솔루션 적용 효과 및 성과 모델</h2>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 1rem;">블랭블 최적화 솔루션 적용 효과 및 성과 모델</h2>
                 
                 <div style="display: flex; gap: 2rem;">
                     <!-- 좌측: 도입 전 (BEFORE) -->
@@ -972,7 +992,7 @@
                     <div style="flex: 1; background: #f4fbf7; border: 1px solid #d3f4e4; border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <span style="background: #38b000; color: #ffffff; font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 20px;">AFTER</span>
-                            <strong style="font-size: 1.05rem; color: #38b000;">블랭블랭 지능형 AEO/GEO 포스팅</strong>
+                            <strong style="font-size: 1.05rem; color: #38b000;">블랭블 지능형 AEO/GEO 포스팅</strong>
                         </div>
                         <ul style="font-size: 0.8rem; color: #495057; padding-left: 1.2rem; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.5;">
                             <li><strong>HTML 테이블 및 마크업 최적화:</strong> AI 엔진이 핵심 답변을 신속 수집하여 최상단 AI 요약 카드에 추천.</li>
@@ -997,12 +1017,12 @@
             </div>
         </div>
 
-        <!-- Page 6: 블랭블랭 지능형 솔루션 제안 (Intelligent Optimization Services) -->
+        <!-- Page 6: 블랭블 지능형 솔루션 제안 (Intelligent Optimization Services) -->
         <div class="pdf-page" id="pdf-page-6" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">
-                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">05. 블랭블랭 지능형 최적화 솔루션 (Intelligent Optimization Services)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 제안서</span>
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">05. 블랭블 지능형 최적화 솔루션 (Intelligent Optimization Services)</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블 AEO 제안서</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 0.8rem;">귀사의 AI 검색 트래픽 점유를 위한 전략 제안</h2>
@@ -1046,7 +1066,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 2.2rem;">
                     <span style="font-size: 0.88rem; font-weight: 700; color: #00b4d8;">06. 추진 로드맵 및 파트너십 (Roadmap & Partnership)</span>
-                    <span style="font-size: 0.88rem; color: #a69ebd;">블랭블랭 제안서</span>
+                    <span style="font-size: 0.88rem; color: #a69ebd;">블랭블 제안서</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #ffffff; margin-bottom: 0.8rem;">지능형 검색 노출 극대화 4단계 추진 로드맵</h2>
@@ -1084,7 +1104,7 @@
                 <h3 style="font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 0.35rem;">귀사의 마케팅 자산을 AI 시대의 강력한 트래픽 엔진으로 변환해 드립니다</h3>
                 <p style="font-size: 0.85rem; color: #dfc2ff; margin-bottom: 0px; line-height: 1.45;">
                     본 분석 제안서를 기반으로 하여 귀사 브랜드 블로그에 맞춘 개별 마케팅 타겟 처방전을 무상으로 지원해 드립니다.<br>
-                    <strong>지금 블랭블랭 전략분석팀에 정밀 컨설팅을 의뢰해 보십시오.</strong> (협력 문의: contact@mydamgong.co.kr)
+                    <strong>지금 블랭블 전략분석팀에 정밀 컨설팅을 의뢰해 보십시오.</strong> (협력 문의: contact@mydamgong.co.kr)
                 </p>
             </div>
             

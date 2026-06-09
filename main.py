@@ -1164,7 +1164,7 @@ async def diagnose_blog_post(
     return result
 
 # ==========================================
-# 블랭블랭 블로그지수 분석 신규 API
+# 블랭블 블로그지수 분석 신규 API
 # ==========================================
 import math
 import urllib.parse

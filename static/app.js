@@ -159,6 +159,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const distCountAi = document.getElementById("dist-count-ai");
     const distCountSearch = document.getElementById("dist-count-search");
 
+    // AEO 종합 성과 점수 엘리먼트
+    const aeoScoreRing = document.getElementById("aeo-score-ring");
+    const aeoScoreNum = document.getElementById("aeo-score-num");
+    const aeoGradeText = document.getElementById("aeo-grade-text");
+
     // 필터 & 정렬 카운트 뱃지 엘리먼트
     const chipCountAll = document.getElementById("chip-count-all");
     const chipCountSearchOnly = document.getElementById("chip-count-search-only");
@@ -1316,6 +1321,13 @@ document.addEventListener("DOMContentLoaded", () => {
             distBarSearch.style.width = "0%";
             distCountAi.textContent = "0% (0)";
             distCountSearch.textContent = "0% (0)";
+
+            if (aeoScoreNum) aeoScoreNum.textContent = 0;
+            if (aeoGradeText) {
+                aeoGradeText.textContent = "미진단";
+                aeoGradeText.style.color = "#00f5d4";
+            }
+            if (aeoScoreRing) aeoScoreRing.style.strokeDashoffset = 282.74;
             return;
         }
 
@@ -1353,6 +1365,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
         distCountAi.textContent = `${aiPercent}% (${aiCount})`;
         distCountSearch.textContent = `${searchPercent}% (${searchCount})`;
+
+        // 4. AEO 종합 성과 점수 계산 (검색노출 40% + AI브리핑노출 40% + 최종AI추천률 20%)
+        const aiActivePercent = total > 0 ? Math.round((aiActiveCount / total) * 100) : 0;
+        let aeoScore = Math.round((searchPercent * 0.4) + (aiActivePercent * 0.4) + (aiPercent * 0.2));
+        aeoScore = Math.max(5, Math.min(100, aeoScore));
+
+        let grade = "누락";
+        let gradeColor = "#ff3b30";
+        if (aeoScore >= 80) {
+            grade = "최적";
+            gradeColor = "#00f5d4";
+        } else if (aeoScore >= 45) {
+            grade = "활성";
+            gradeColor = "var(--neon-blue)";
+        } else if (aeoScore >= 20) {
+            grade = "미흡";
+            gradeColor = "#ffd166";
+        } else {
+            grade = "누락";
+            gradeColor = "#ff3b30";
+        }
+
+        if (aeoScoreNum) aeoScoreNum.textContent = aeoScore;
+        if (aeoGradeText) {
+            aeoGradeText.textContent = grade;
+            aeoGradeText.style.color = gradeColor;
+            aeoGradeText.style.textShadow = `0 0 8px ${gradeColor}80`;
+        }
+        if (aeoScoreRing) {
+            const circumference = 282.74; // 2 * PI * 45
+            const offset = circumference - (aeoScore / 100) * circumference;
+            aeoScoreRing.style.strokeDashoffset = offset;
+        }
     }
 
     // 필터 칩 클릭 바인딩
@@ -1498,7 +1543,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     grade = "C-Grade (미흡 / 긴급 튜닝 필요)";
                     gradeColor = "#ff3b30";
-                    diagSummary = `귀사 블로그의 AI 검색 최적화 상태는 <strong>매우 미흡(C-Grade)</strong>한 위험군으로 파악됩니다. 전통적인 뷰/블로그 탭에는 일부 글이 노출되고 있으나, 네이버 검색 최상단을 점유하고 있는 AI 브리핑 영역에는 추천 출처가 거의 잡히지 않고 있습니다. 로봇이 정보를 독해(MR)할 수 없는 단순 줄글 중심의 작성 방식과 E-E-A-T 신뢰 출처 표기 누락이 누적된 결과입니다. 블랭블랭의 맞춤형 AEO 포스팅 서비스 도입이 시급히 요구됩니다.`;
+                    diagSummary = `귀사 블로그의 AI 검색 최적화 상태는 <strong>매우 미흡(C-Grade)</strong>한 위험군으로 파악됩니다. 전통적인 뷰/블로그 탭에는 일부 글이 노출되고 있으나, 네이버 검색 최상단을 점유하고 있는 AI 브리핑 영역에는 추천 출처가 거의 잡히지 않고 있습니다. 로봇이 정보를 독해(MR)할 수 없는 단순 줄글 중심의 작성 방식과 E-E-A-T 신뢰 출처 표기 누락이 누적된 결과입니다. 블랭블의 맞춤형 AEO 포스팅 서비스 도입이 시급히 요구됩니다.`;
                 }
                 
                 document.getElementById("pdf-diag-grade").innerHTML = grade;
@@ -2100,7 +2145,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // 맞춤형 AI 정밀 처방전
             let prescription = `
                 <h3 style="font-size: 1.1rem; color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue-glow); display: flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; font-weight:700;">
-                    <i class="fa-solid fa-lightbulb"></i> 블랭블랭 AI 통합 노출 처방 가이드
+                    <i class="fa-solid fa-lightbulb"></i> 블랭블 AI 통합 노출 처방 가이드
                 </h3>
                 <ul style="margin: 0.8rem 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.88rem; color: #e0dced;">
                     <li><strong>두괄식 요약(Snippet) 테이블 도입</strong>: 포스팅 최상단 3줄 이내에 핵심 요약과 표(Table)를 적용하여 AI 로봇이 본문의 주제를 단 0.1초 만에 식별하도록 구성하십시오.</li>

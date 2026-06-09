@@ -1506,6 +1506,12 @@ body {
     justify-content: center;
 }
 
+.stat-card.span-3-col {
+    grid-column: span 3;
+    justify-content: center;
+}
+
+
 .stat-label {
     font-size: 0.82rem;
     font-weight: 600;
