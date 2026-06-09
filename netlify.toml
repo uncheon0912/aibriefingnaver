@@ -6,6 +6,6 @@
 [[redirects]]
   from = "/api/*"
   # TODO: Render나 외부 플랫폼에 파이썬 백엔드를 배포한 후, 아래 주소의 "your-backend-url" 부분을 실제 백엔드 URL로 변경하세요.
-  to = "https://your-backend-url.onrender.com/api/:splat"
+  to = "https://aibriefingnaver.onrender.com/api/:splat"
   status = 200
   force = true
