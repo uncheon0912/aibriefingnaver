@@ -1941,21 +1941,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 const warningPenalty = (warningCount / totalPostsCount) * 100;
 
                 // 종합 지수 합산 (가중치 적용)
-                let finalScore = Math.round((activeScore * 0.4) + ((100 - missingPenalty) * 0.4) + ((100 - warningPenalty) * 0.2));
-                finalScore = Math.max(5, Math.min(100, finalScore)); // 5점~100점 제한
-
-                // 등급 판정
+                let finalScore = 0;
                 let gradeText = "저품질";
-                if (finalScore < 30 || missingRatio >= 60) {
+
+                // 누락 포스팅이 90% 이상인 경우 점수 미측정(0점) 및 저품질 처리
+                if (missingRatio >= 90) {
+                    finalScore = 0;
                     gradeText = "저품질";
-                } else if (finalScore < 80) {
-                    // 준최 1~7 분할
-                    const junLevel = Math.ceil((finalScore - 29) / 7.15); // 30점부터 80점 미만 구간
-                    gradeText = `준최 ${Math.max(1, Math.min(7, junLevel))}`;
                 } else {
-                    // 최적 1~4 분할
-                    const optLevel = Math.ceil((finalScore - 79) / 5); // 80점부터 100점 구간
-                    gradeText = `최적 ${Math.max(1, Math.min(4, optLevel))}`;
+                    finalScore = Math.round((activeScore * 0.4) + ((100 - missingPenalty) * 0.4) + ((100 - warningPenalty) * 0.2));
+                    finalScore = Math.max(5, Math.min(100, finalScore)); // 5점~100점 제한
+
+                    // 등급 판정
+                    if (finalScore < 30 || missingRatio >= 60) {
+                        gradeText = "저품질";
+                    } else if (finalScore < 80) {
+                        // 준최 1~7 분할
+                        const junLevel = Math.ceil((finalScore - 29) / 7.15); // 30점부터 80점 미만 구간
+                        gradeText = `준최 ${Math.max(1, Math.min(7, junLevel))}`;
+                    } else {
+                        // 최적 1~4 분할
+                        const optLevel = Math.ceil((finalScore - 79) / 5); // 80점부터 100점 구간
+                        gradeText = `최적 ${Math.max(1, Math.min(4, optLevel))}`;
+                    }
                 }
 
                 // 점수 서클 노출
