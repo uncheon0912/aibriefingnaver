@@ -5,10 +5,18 @@ import hashlib
 import base64
 import requests
 
-# 네이버 검색광고 API 설정 정보 (전달받은 자격증명 적용)
-CUSTOMER_ID = 3987068
-ACCESS_LICENSE = "0100000000f73f18101754f8bf6d9e1b37a1d1decaacc6d7d541d2b6fc7255de808c901112"
-SECRET_KEY = "AQAAAAD3PxgQF1T4v22eGzeh0d7KBXqCHFwGNFvnKA9Y1oG2lw=="
+import os
+from dotenv import load_dotenv
+
+# .env 파일 로드
+load_dotenv()
+
+# 네이버 검색광고 API 설정 정보 (환경변수에서 로드)
+CUSTOMER_ID_ENV = os.getenv("NAVER_CUSTOMER_ID")
+CUSTOMER_ID = int(CUSTOMER_ID_ENV) if CUSTOMER_ID_ENV else None
+
+ACCESS_LICENSE = os.getenv("NAVER_ACCESS_LICENSE")
+SECRET_KEY = os.getenv("NAVER_SECRET_KEY")
 
 BASE_URL = "https://api.searchad.naver.com"
 

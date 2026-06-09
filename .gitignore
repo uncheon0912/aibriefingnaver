@@ -20,3 +20,11 @@ Thumbs.db
 .system_generated/
 .gemini/
 scratch/
+
+# 로컬 환경 변수 설정 (보안상 Git 업로드 금지)
+.env
+*.env
+
+# 로컬 크롤링 테스트용 덤프 HTML 파일들
+m_blog_page.html
+pc_blog_page.html
