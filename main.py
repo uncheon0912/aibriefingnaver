@@ -1161,5 +1161,5 @@ async def diagnose_blog_post(
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
-    # 로컬 개발 서버 구동 (포트 8000)
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    # 로컬 개발 서버 구동 (포트 8900)
+    uvicorn.run("main:app", host="0.0.0.0", port=8900, reload=True)
