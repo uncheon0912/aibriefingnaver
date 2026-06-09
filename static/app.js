@@ -763,7 +763,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            const res = await fetch(`/api/blog/posts?blog_id=${encodeURIComponent(blogId)}&offset=${offset}&limit=${limit}`);
+            const res = await fetch(`/api/blog/posts?blog_id=${encodeURIComponent(blogId)}&offset=${offset}&limit=${limit}&token=${encodeURIComponent(token)}`);
             if (!res.ok) {
                 throw new Error("블로그 글 목록을 가져올 수 없습니다. 비공개이거나 아이디가 잘못되었습니다.");
             }
@@ -1778,7 +1778,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 // 1. 프로필 & 인기글 & 최근글 기본 목록 가져오기
-                const profileRes = await fetch(`/api/blog/index/profile?blog_id=${blogId}`);
+                const profileRes = await fetch(`/api/blog/index/profile?blog_id=${blogId}&token=${encodeURIComponent(token)}`);
                 if (!profileRes.ok) {
                     throw new Error("블로그 기본 프로필 정보를 가져오지 못했습니다. ID가 정확한지 확인해 주세요.");
                 }
