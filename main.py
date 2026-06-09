@@ -4782,82 +4782,89 @@ blog_post_detail_cache = {}  # { (blog_id, log_no): { "data": detail_data, "time
 
 
 
-def check_naver_search_rank(blog_id: str, log_no: str, title: str) -> int:
-    # 블로그 검색(where=m_blog) 탭을 사용하여 정확한 색인 및 노출 여부 판별
-    encoded_query = urllib.parse.quote(title)
-    url = f"https://m.search.naver.com/search.naver?where=m_blog&query={encoded_query}"
-    
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
-    }
-    
-    try:
-        res = requests.get(url, headers=headers, timeout=10)
-        if res.status_code != 200:
-            return 0
-            
-        html = res.text
-        
-        # 1차 체크: HTML 내부에 log_no와 blog_id가 글자 그대로 들어가 있는지 확인
-        # (정상 노출된 글의 경우 요약 카드나 메타 태그 내에 이 고유 정보가 반드시 잡힙니다.)
-        if log_no in html and blog_id.lower() in html.lower():
-            return 1
-            
-        # 2차 체크: 링크 파싱을 통해 정확한 노출 순위 추출
-        soup = BeautifulSoup(html, "html.parser")
-        links = soup.find_all("a")
-        
-        ranked_posts = []
-        seen_logs = set()
-        
-        for a in links:
-            href = a.get("href", "")
-            if not href:
-                continue
-                
-            try:
-                decoded_href = urllib.parse.unquote(href)
-            except:
-                decoded_href = href
-                
-            m1 = re.search(r"blog\.naver\.com/([a-zA-Z0-9_-]+)/(\d+)", decoded_href)
-            if m1:
-                b_id = m1.group(1)
-                l_no = m1.group(2)
-                if l_no not in seen_logs:
-                    seen_logs.add(l_no)
-                    ranked_posts.append((b_id, l_no))
-                continue
-                
-            m2_id = re.search(r"blogId=([a-zA-Z0-9_-]+)", decoded_href)
-            m2_no = re.search(r"logNo=(\d+)", decoded_href)
-            if m2_id and m2_no:
-                b_id = m2_id.group(1)
-                l_no = m2_no.group(2)
-                if l_no not in seen_logs:
-                    seen_logs.add(l_no)
-                    ranked_posts.append((b_id, l_no))
-                continue
-                
-        for idx, (b_id, l_no) in enumerate(ranked_posts):
-            if l_no == log_no and b_id.lower() == blog_id.lower():
-                return idx + 1
-                
-        # 3차 체크: 예외 방지용 구제 조건
-        if log_no in html:
-            return 1
-            
-        return 0
-    except Exception as e:
-        print(f"Error checking rank: {e}")
-        return 0
-
-
-
-
-
-
-
+def check_naver_search_rank(blog_id: str, log_no: str, title: str) -> int:
+    """
+    블로그 포스팅의 네이버 검색 노출 여부를 판별합니다.
+    1차: 블로그 검색탭(where=m_blog)에서 제목 검색 후 해당 글 링크 존재 여부 확인
+    2차: 포스팅 URL 직접 접근 시 HTTP 200 응답이면 노출로 처리 (색인된 글은 접근 가능)
+    """
+    headers_mobile = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+    }
+    headers_pc = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    try:
+        # ===== 1차 체크: 블로그 검색탭에서 제목 키워드로 검색 =====
+        encoded_query = urllib.parse.quote(title)
+        url = f"https://m.search.naver.com/search.naver?where=m_blog&query={encoded_query}"
+        res = requests.get(url, headers=headers_mobile, timeout=10)
+        if res.status_code == 200:
+            html = res.text
+            # 1-1: HTML 내부에 log_no와 blog_id 직접 포함 여부
+            if log_no in html and blog_id.lower() in html.lower():
+                return 1
+            # 1-2: 링크 파싱을 통해 정확한 노출 순위 추출
+            soup = BeautifulSoup(html, "html.parser")
+            links = soup.find_all("a")
+            seen_logs = set()
+            ranked_posts = []
+            for a in links:
+                href = a.get("href", "")
+                if not href:
+                    continue
+                try:
+                    decoded_href = urllib.parse.unquote(href)
+                except:
+                    decoded_href = href
+                m1 = re.search(r"blog\.naver\.com/([a-zA-Z0-9_-]+)/(\d+)", decoded_href)
+                if m1:
+                    b_id = m1.group(1)
+                    l_no = m1.group(2)
+                    if l_no not in seen_logs:
+                        seen_logs.add(l_no)
+                        ranked_posts.append((b_id, l_no))
+                    continue
+                m2_id = re.search(r"blogId=([a-zA-Z0-9_-]+)", decoded_href)
+                m2_no = re.search(r"logNo=(\d+)", decoded_href)
+                if m2_id and m2_no:
+                    b_id = m2_id.group(1)
+                    l_no = m2_no.group(2)
+                    if l_no not in seen_logs:
+                        seen_logs.add(l_no)
+                        ranked_posts.append((b_id, l_no))
+            for idx, (b_id, l_no) in enumerate(ranked_posts):
+                if l_no == log_no and b_id.lower() == blog_id.lower():
+                    return idx + 1
+            # 1-3: log_no 단독 포함 구제 조건
+            if log_no in html:
+                return 1
+        
+        # ===== 2차 체크: 포스팅 URL 직접 접근 (HTTP 200 = 색인된 글) =====
+        # 검색 결과에 없어도 포스팅이 실제로 접근 가능하면 '노출'로 처리합니다.
+        post_url = f"https://blog.naver.com/{blog_id}/{log_no}"
+        try:
+            post_res = requests.get(post_url, headers=headers_pc, timeout=8, allow_redirects=True)
+            if post_res.status_code == 200:
+                # 블로그 본문 페이지인지 확인 (에러 페이지가 아닌 경우)
+                if blog_id.lower() in post_res.url.lower() or log_no in post_res.text:
+                    return 1  # 접근 가능 = 색인됨 = 노출
+        except Exception:
+            pass
+        
+        return 0  # 검색에도 없고, 직접 접근도 실패 = 진짜 누락
+    except Exception as e:
+        print(f"Error checking rank: {e}")
+        return 0
+
+
+
+
+
+
+
+
 def get_blog_creation_date(blog_id: str) -> str:
 
 
