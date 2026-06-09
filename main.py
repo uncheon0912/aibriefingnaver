@@ -928,6 +928,9 @@ async def get_blog_posts(
             if response.status_code != 200:
                 continue
             
+            # 한글 인코딩 깨짐 방지 명시
+            response.encoding = "utf-8"
+            
             try:
                 data = response.json()
             except Exception:
@@ -962,12 +965,15 @@ async def get_blog_posts(
             pub_date = add_date_raw
             iso_date = ""
             
-            # YYYY.MM.DD. (끝에 점이 올 수도 있음) 형태 매칭
-            date_match = re.match(r"(\d{4})\.(\d{2})\.(\d{2})", add_date_raw)
+            # YYYY. M. D. 또는 YYYY.MM.DD. (끝에 점이 올 수도 있음) 형태 매칭
+            date_match = re.match(r"(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})", add_date_raw)
             if date_match:
                 year, month, day = date_match.groups()
-                pub_date = f"{month}.{day}"
-                iso_date = f"{year}-{month}-{day}"
+                # 1자리 수인 경우 앞에 0 채우기
+                month_padded = month.zfill(2)
+                day_padded = day.zfill(2)
+                pub_date = f"{month_padded}.{day_padded}"
+                iso_date = f"{year}-{month_padded}-{day_padded}"
             else:
                 # relative date (e.g., '13시간 전', '방금 전') -> 오늘 날짜로 매핑
                 today = date.today()
