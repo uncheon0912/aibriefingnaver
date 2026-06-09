@@ -3020,6 +3020,11 @@ body {
     color: var(--text-secondary);
 }
 
+/* PDF 보고서 밝은 테마 페이지 내 텍스트 가독성 및 상속 복구 */
+.pdf-page * {
+    color: inherit;
+}
+
 
 
 
