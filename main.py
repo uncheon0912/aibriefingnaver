@@ -1399,41 +1399,64 @@ async def get_blog_index_profile(
             
         profile_data["popular_posts"] = popular_posts
         
-        # 최근 포스트 15개 기본 정보 가져오기
+        # 최근 포스트 50개 기본 정보 가져오기 (PostTitleListAsync.naver 사용)
         recent_posts = []
-        recent_url = f"https://m.blog.naver.com/api/blogs/{blog_id}/post-list?categoryNo=0&currentPage=1&countPerPage=15"
         
-        def fetch_recent():
-            try:
-                res = requests.get(recent_url, headers=headers, timeout=10)
-                if res.status_code == 200:
-                    data = res.json()
-                    return data.get("result", {}).get("items", [])
-            except Exception as e:
-                print(f"Error fetching recent posts: {e}")
-            return []
+        def fetch_recent_posts_pc():
+            posts_all = []
+            headers_pc = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+            # 50개를 수집하기 위해 1페이지(30개)와 2페이지(30개)를 순차 호출
+            url_p1 = f"https://blog.naver.com/PostTitleListAsync.naver?blogId={blog_id}&viewDate=&categoryNo=&parentCategoryNo=&countPerPage=30&currentPage=1"
+            url_p2 = f"https://blog.naver.com/PostTitleListAsync.naver?blogId={blog_id}&viewDate=&categoryNo=&parentCategoryNo=&countPerPage=30&currentPage=2"
             
-        rec_list = await loop.run_in_executor(executor, fetch_recent)
-        
-        for p in rec_list:
-            title_raw = p.get("titleWithInspectMessage", "")
-            title = BeautifulSoup(urllib.parse.unquote_plus(title_raw), "html.parser").text
-            
-            # addDate가 타임스탬프(밀리초)일 것이므로 변환
-            add_date_ts = p.get("addDate")
-            pub_date = ""
-            if add_date_ts:
+            for url_req in [url_p1, url_p2]:
                 try:
-                    pub_date = datetime.fromtimestamp(add_date_ts / 1000.0).strftime("%Y-%m-%d")
-                except:
-                    pub_date = str(add_date_ts)
-                    
+                    r = requests.get(url_req, headers=headers_pc, timeout=10)
+                    r.encoding = "utf-8"
+                    if r.status_code == 200:
+                        import json
+                        clean_t = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', r.text)
+                        data_p = json.loads(clean_t, strict=False)
+                        if data_p.get("resultCode") == "S":
+                            posts_all.extend(data_p.get("postList", []))
+                except Exception as e:
+                    print(f"Error fetching page: {e}")
+            return posts_all
+            
+        rec_list_raw = await loop.run_in_executor(executor, fetch_recent_posts_pc)
+        
+        # 최대 50개 슬라이싱하여 메타 데이터 정제
+        for p in rec_list_raw[:50]:
+            title_enc = p.get("title", "")
+            title = urllib.parse.unquote_plus(title_enc)
+            title = BeautifulSoup(title, "html.parser").text
+            
+            category_name = p.get("categoryName", "전체")
+            if not category_name:
+                category_name = "전체"
+                
+            add_date_raw = p.get("addDate", "").strip()
+            pub_date = add_date_raw
+            date_match = re.match(r"(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})", add_date_raw)
+            if date_match:
+                year, month, day = date_match.groups()
+                pub_date = f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+            
+            comment_count = p.get("commentCount")
+            if comment_count is None:
+                comment_count = p.get("commentCnt", 0)
+            sympathy_count = p.get("sympathyCount")
+            if sympathy_count is None:
+                sympathy_count = p.get("sympathyCnt", 0)
+                
             recent_posts.append({
                 "log_no": str(p.get("logNo")),
                 "title": title,
-                "comment_count": p.get("commentCnt", 0),
-                "sympathy_count": p.get("sympathyCnt", 0),
-                "category_name": p.get("categoryName", "전체"),
+                "comment_count": int(comment_count or 0),
+                "sympathy_count": int(sympathy_count or 0),
+                "category_name": category_name,
                 "pub_date": pub_date,
                 "link": f"https://blog.naver.com/{blog_id}/{p.get('logNo')}"
             })

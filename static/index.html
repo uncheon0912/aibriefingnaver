@@ -403,13 +403,6 @@
                         </div>
                     </div>
                 </div>
-            </main>
-
-            <!-- 하단 푸터 -->
-            <footer class="app-footer">
-                <p>&copy; 2026 블랭블랭. All rights reserved. Powered by Naver Search Ad API.</p>
-            </footer>
-        </div>
 
                 <!-- ==================== 뷰 3. 블로그지수 분석 뷰 ==================== -->
                 <div id="view-blog-index" class="view-panel hide">
@@ -458,7 +451,7 @@
                                     <div class="profile-avatar-container">
                                         <img id="blog-profile-img" src="https://ssl.pstatic.net/static/blog/img/profile/profile_default_90.png" alt="프로필 이미지" referrerpolicy="no-referrer">
                                     </div>
-                                    <h3 id="blog-nickname">머니라함의 미담공장</h3>
+                                    <h3 id="blog-nickname">머니라함의 블랭블랭</h3>
                                     <span class="category-badge" id="blog-directory">건강·의학</span>
                                 </div>
                                 <div class="profile-meta-list">
@@ -598,8 +591,32 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
+
+            <!-- 하단 푸터 -->
+            <footer class="app-footer">
+                <p>&copy; 2026 블랭블랭. All rights reserved. Powered by Naver Search Ad API.</p>
+            </footer>
+        </div>
     
+    <!-- 블로그 누락 포스팅 AI 정밀 분석 모달 -->
+    <div id="ai-analysis-modal" class="modal-overlay hide">
+        <div class="modal-card glass-panel premium-modal" style="max-width: 650px;">
+            <div class="modal-header">
+                <div class="modal-header-title">
+                    <span class="modal-badge" style="background: rgba(230, 57, 70, 0.12); border: 1px solid rgba(230, 57, 70, 0.35); color: #ff3b30; text-shadow: 0 0 6px rgba(255, 59, 48, 0.4);"><i class="fa-solid fa-triangle-exclamation"></i> AI 누락 진단 소견서</span>
+                    <h2 id="ai-modal-post-title" style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin-top: 0.5rem; word-break: break-all;">포스트 제목</h2>
+                </div>
+                <button id="ai-modal-close-btn" class="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body-layout" style="display: block; max-height: 70vh; overflow-y: auto; padding-right: 0.5rem; text-align: left;">
+                <div id="ai-analysis-content" class="ai-rendered-content">
+                    <!-- 동적 생성 리포트 들어가는 자리 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- AEO 실시간 상세 분석 팝업 모달 -->
     <div id="aeo-detail-modal" class="modal-overlay hide">
         <div class="modal-card glass-panel premium-modal">
@@ -926,7 +943,7 @@
             </div>
         </div>
 
-        <!-- Page 5: 미담공장 AX 도입 전후 비교 및 성과 모델 (Performance Gap Analysis) -->
+        <!-- Page 5: 블랭블랭 도입 전후 비교 및 성과 모델 (Performance Gap Analysis) -->
         <div class="pdf-page" id="pdf-page-5" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.2rem;">
@@ -980,7 +997,7 @@
             </div>
         </div>
 
-        <!-- Page 6: 미담공장 AX 지능형 솔루션 제안 (AX Intelligent Optimization Services) -->
+        <!-- Page 6: 블랭블랭 지능형 솔루션 제안 (Intelligent Optimization Services) -->
         <div class="pdf-page" id="pdf-page-6" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">

@@ -2932,6 +2932,88 @@ body {
     color: var(--neon-blue);
 }
 
+/* AI 분석 소형 버튼 스타일 (누락 배지 하단용) */
+.btn-ai-analyze {
+    display: inline-block;
+    margin-top: 0.35rem;
+    background: linear-gradient(135deg, #7b2cbf 0%, #3a0ca3 100%);
+    border: 1px solid rgba(157, 78, 221, 0.4);
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(123, 44, 191, 0.25);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-ai-analyze:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(123, 44, 191, 0.55), 0 0 5px var(--neon-purple-glow);
+    border-color: var(--neon-purple);
+    filter: brightness(1.15);
+}
+
+.btn-ai-analyze:active {
+    transform: translateY(0);
+}
+
+/* AI 진단 소견서 마크다운 렌더링용 스타일 */
+.ai-rendered-content {
+    color: #e0dced;
+    line-height: 1.65;
+    font-size: 0.92rem;
+}
+
+.ai-rendered-content h1, 
+.ai-rendered-content h2, 
+.ai-rendered-content h3 {
+    color: #ffffff;
+    margin-top: 1.25rem;
+    margin-bottom: 0.6rem;
+    font-weight: 700;
+}
+
+.ai-rendered-content h1 {
+    font-size: 1.35rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.45rem;
+}
+
+.ai-rendered-content h2 {
+    font-size: 1.15rem;
+}
+
+.ai-rendered-content hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 1.25rem 0;
+}
+
+.ai-rendered-content ul, 
+.ai-rendered-content ol {
+    padding-left: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.ai-rendered-content li {
+    margin-bottom: 0.45rem;
+}
+
+.ai-rendered-content strong {
+    color: #ffffff;
+}
+
+.ai-rendered-content blockquote {
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 4px solid var(--neon-purple);
+    border-radius: 0 6px 6px 0;
+    color: var(--text-secondary);
+}
+
 
 
 

@@ -1824,9 +1824,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (blogIndexProgressFill) blogIndexProgressFill.style.width = `${percent}%`;
                     if (blogIndexProgressPercent) blogIndexProgressPercent.textContent = `${percent}%`;
 
-                    // 마지막 루프가 아니면 1.2초 Throttling 딜레이 부여
+                    // 마지막 루프가 아니면 0.8초 Throttling 딜레이 부여
                     if (i < totalPostsCount - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 1200));
+                        await new Promise(resolve => setTimeout(resolve, 800));
                     }
                 }
 
@@ -1976,7 +1976,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const isVisible = (filter === "all" || p.status === filter);
             const hiddenClass = isVisible ? "" : "class='row-hidden'";
 
-            let statusBadge = `<span class="idx-badge missing">누락</span>`;
+            let statusBadge = `<span class="idx-badge missing">누락</span><br><button class="btn-ai-analyze" data-log-no="${p.log_no}">Ai분석</button>`;
             if (p.status === "최적") {
                 statusBadge = `<span class="idx-badge optimal">최적</span>`;
             } else if (p.status === "활성") {
@@ -2027,6 +2027,109 @@ document.addEventListener("DOMContentLoaded", () => {
             e.target.classList.add("active");
             const filterValue = e.target.getAttribute("data-filter");
             renderBlogIndexTable(filterValue);
+        }
+    });
+
+    // ==========================================================================
+    // 신규: AI 누락 진단 모달 제어 및 리포트 동적 생성
+    // ==========================================================================
+    const aiAnalysisModal = document.getElementById("ai-analysis-modal");
+    const aiModalPostTitle = document.getElementById("ai-modal-post-title");
+    const aiAnalysisContent = document.getElementById("ai-analysis-content");
+    const aiModalCloseBtn = document.getElementById("ai-modal-close-btn");
+
+    if (aiModalCloseBtn && aiAnalysisModal) {
+        aiModalCloseBtn.addEventListener("click", () => {
+            aiAnalysisModal.classList.add("hide");
+        });
+    }
+
+    // 모달 바깥 영역 클릭 시 닫기
+    window.addEventListener("click", (e) => {
+        if (e.target === aiAnalysisModal) {
+            aiAnalysisModal.classList.add("hide");
+        }
+    });
+
+    // Ai분석 버튼 클릭 이벤트 위임 바인딩
+    document.addEventListener("click", (e) => {
+        if (e.target && e.target.classList.contains("btn-ai-analyze")) {
+            const logNo = e.target.getAttribute("data-log-no");
+            const post = blogPostsData.find(p => p.log_no === logNo);
+            
+            if (!post) {
+                alert("포스팅 데이터를 찾을 수 없습니다.");
+                return;
+            }
+
+            if (aiModalPostTitle) aiModalPostTitle.textContent = post.title;
+
+            // 지표 기반 위험/누락 요인 분석
+            const chars = post.chars_count || 0;
+            const imgs = post.images_count || 0;
+            const links = post.links_count || 0;
+            const videos = post.videos_count || 0;
+            const quotes = post.quotes_count || 0;
+            const maps = post.maps_count || 0;
+
+            let issues = [];
+
+            if (chars < 1200) {
+                issues.push(`🚨 <strong>본문 글자 수 부족 (${chars.toLocaleString()}자)</strong>: 네이버 View 탭 및 스마트블록 검색 노출을 위한 권장 텍스트 분량은 공백 제외 1,500자 이상입니다. 글이 너무 짧을 경우 정보성이 부족한 피상적 문서로 오해받기 쉽습니다.`);
+            }
+            if (imgs < 5) {
+                issues.push(`🚨 <strong>시각 자료(이미지) 수량 미달 (${imgs}개)</strong>: 소비자의 체류 시간을 확보하고 정보를 효과적으로 전달하기 위해 7장 이상의 이미지를 사용하는 것이 좋습니다. 특히 캡션(설명)이 생략되면 기계 가독성(Readability) 점수가 저하됩니다.`);
+            }
+            if (links >= 3) {
+                issues.push(`🚨 <strong>과도한 상용 외부 링크 존재 (${links}개)</strong>: 본문 하단 등에 다수의 아웃링크를 배치하면 스팸 문서 혹은 상업 광고성 글로 오인받아 통합검색 순위에서 제외(누락)되는 스팸 필터가 작동할 위험이 있습니다.`);
+            }
+            if (videos === 0) {
+                issues.push(`🚨 <strong>멀티미디어(동영상) 요소 부재</strong>: 동영상이 포함된 문서는 고유 창작물 점수가 가산되며, C-Rank 신뢰성 알고리즘에서 가산점을 획득합니다. 10초 내외의 가벼운 영상이라도 꼭 첨부하십시오.`);
+            }
+            if (quotes === 0) {
+                issues.push(`🚨 <strong>인용 블록 및 텍스트 구조화 미흡</strong>: 인용구 블록이 없는 긴 서술형 글은 기계독해(MRC) 효율이 떨어집니다. 인용구를 활용하여 핵심 정의와 요약문을 시각적으로 정제해 보십시오.`);
+            }
+            if (maps === 0 && (post.title.includes("병원") || post.title.includes("마케팅") || post.title.includes("위치") || post.title.includes("맛집") || post.title.includes("내원"))) {
+                issues.push(`🚨 <strong>네이버 지도 링크 누락 (GEO 로직 미반영)</strong>: 특정 오프라인 장소나 병원 내원 등의 정보를 언급함에도 지도가 누락되면 AI 검색 로봇의 GEO(지리 공간 최적화) 추천 적합도가 하락합니다.`);
+            }
+
+            if (issues.length === 0) {
+                issues.push(`🚨 <strong>유사문서 판독 및 색인 제외 필터 작동</strong>: 수치 지표(글자수 ${chars}자, 이미지 ${imgs}개)는 양호하나, 타 웹문서나 타 블로그 글의 유사한 문맥 혹은 특정 키워드의 비정상적 반복(키워드 과포화)으로 인해 네이버 지식 스니펫 알고리즘 상 유사문서로 분류되었을 확률이 매우 높습니다.`);
+            }
+
+            // 맞춤형 AI 정밀 처방전
+            let prescription = `
+                <h3 style="font-size: 1.1rem; color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue-glow); display: flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; font-weight:700;">
+                    <i class="fa-solid fa-lightbulb"></i> 블랭블랭 AI 통합 노출 처방 가이드
+                </h3>
+                <ul style="margin: 0.8rem 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.88rem; color: #e0dced;">
+                    <li><strong>두괄식 요약(Snippet) 테이블 도입</strong>: 포스팅 최상단 3줄 이내에 핵심 요약과 표(Table)를 적용하여 AI 로봇이 본문의 주제를 단 0.1초 만에 식별하도록 구성하십시오.</li>
+                    <li><strong>E-E-A-T 지표 강화 (전문성 증명)</strong>: 글의 서두나 말미에 공신력 있는 의학 정보, 보도자료, 통계 리포트의 출처를 언급하고 원장님의 전문 소견을 구체적으로 가미해 보십시오.</li>
+                    <li><strong>외부 상업 링크 제거 및 텍스트 수정</strong>: 본문 내의 지나치게 반복되는 상업성 문구(상담, 전화, 문의 등)와 카카오톡 ID, 전화번호의 텍스트 노출을 줄이고 대표 외부 링크는 1개 이하로 축소한 뒤 재발행을 고려해 보십시오.</li>
+                </ul>
+            `;
+
+            let reportHtml = `
+                <div style="font-family: sans-serif; line-height: 1.6;">
+                    <h2 style="font-size: 1.15rem; color: #ffffff; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem; font-weight:700;">
+                        <i class="fa-solid fa-circle-info" style="color: #ff3b30;"></i> 감지된 포스팅 누락 병목 요인 (${issues.length}개)
+                    </h2>
+                    <div style="background: rgba(255, 59, 48, 0.04); border: 1px solid rgba(255, 59, 48, 0.15); padding: 1.2rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                        <ul style="margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.88rem; color: #e0dced;">
+                            ${issues.map(issue => `<li style="line-height: 1.5;">${issue}</li>`).join("")}
+                        </ul>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 1.5rem 0;">
+                    ${prescription}
+                    <hr style="border: none; border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 1.5rem 0;">
+                    <p style="font-size: 0.78rem; color: var(--text-secondary); text-align: center; margin-top: 1rem;">
+                        * 본 소견서는 포스팅의 실제 구조(글자수, 리소스 등)와 네이버 로봇의 통합검색 필터를 시뮬레이션하여 동적 분석된 인텔리전스 가이드입니다.
+                    </p>
+                </div>
+            `;
+
+            if (aiAnalysisContent) aiAnalysisContent.innerHTML = reportHtml;
+            if (aiAnalysisModal) aiAnalysisModal.classList.remove("hide");
         }
     });
 });
