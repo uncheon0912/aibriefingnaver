@@ -276,7 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (guestTimerInterval) clearInterval(guestTimerInterval);
                 } else if (data.role === "guest") {
                     headerBadgeContainer.className = "header-badge guest-badge";
-                    headerBadgeContainer.innerHTML = `<span class="badge-dot"></span> 게스트 이용권: <span id="guest-count">${data.remaining}</span>/10회 | 충전까지 <span id="guest-timer">--:--:--</span>`;
+                    headerBadgeContainer.innerHTML = `<span class="badge-dot"></span> 게스트 이용권: <span id="guest-count">${data.remaining}</span>/6회 | 충전까지 <span id="guest-timer">--:--:--</span>`;
                     startGuestTimer();
                 }
             }

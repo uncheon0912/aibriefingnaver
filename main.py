@@ -619,11 +619,11 @@ async def get_auth_status(request: Request, token: str = Query(None, description
         ip = request.client.host
         today = date.today()
         count = guest_rate_limits[ip]["daily_count"][today]
-        remaining = max(0, 10 - count)
+        remaining = max(0, 6 - count)
         return {
             "role": "guest",
             "remaining": remaining,
-            "limit": 10
+            "limit": 6
         }
     else:
         raise HTTPException(status_code=401, detail="유효하지 않은 비밀번호입니다.")
@@ -646,7 +646,7 @@ async def analyze_keyword(
         # 마스터 비밀번호: 무제한 검색 허용
         pass
     elif token == "5420":
-        # 게스트 비밀번호: 동일 IP 하루 10회, 1분 5회 쿨타임 제한
+        # 게스트 비밀번호: 동일 IP 하루 6회, 1분 5회 쿨타임 제한
         ip = request.client.host
         now = datetime.now()
         today = date.today()
@@ -661,11 +661,11 @@ async def analyze_keyword(
                 detail="[게스트 제한] 1분 이내에 5회 이상 검색할 수 없습니다. 쿨타임이 필요합니다."
             )
             
-        # 2) 일일 누적 검색 횟수 체크 (10회 제한)
-        if guest_rate_limits[ip]["daily_count"][today] >= 10:
+        # 2) 일일 누적 검색 횟수 체크 (6회 제한)
+        if guest_rate_limits[ip]["daily_count"][today] >= 6:
             raise HTTPException(
                 status_code=429, 
-                detail="[게스트 제한] 게스트 비밀번호로는 하루 최대 10회만 검색 가능합니다. 마스터 비밀번호를 사용해 주세요."
+                detail="[게스트 제한] 게스트 비밀번호로는 하루 최대 6회만 검색 가능합니다. 마스터 비밀번호를 사용해 주세요."
             )
             
         # 통과 시 누적 기록 기입
@@ -890,8 +890,8 @@ async def analyze_keyword(
         today = date.today()
         count = guest_rate_limits[ip]["daily_count"][today]
         analysis_data["guest_info"] = {
-            "remaining": max(0, 10 - count),
-            "limit": 10
+            "remaining": max(0, 6 - count),
+            "limit": 6
         }
         
     return analysis_data
@@ -1025,11 +1025,11 @@ async def diagnose_blog_post(
                 detail="[게스트 제한] 1분 이내에 5회 이상 검색할 수 없습니다. 쿨타임이 필요합니다."
             )
             
-        # 일일 누적 검색 횟수 체크 (10회 제한)
-        if guest_rate_limits[ip]["daily_count"][today] >= 10:
+        # 일일 누적 검색 횟수 체크 (6회 제한)
+        if guest_rate_limits[ip]["daily_count"][today] >= 6:
             raise HTTPException(
                 status_code=429, 
-                detail="[게스트 제한] 하루 최대 10회만 검색 가능합니다. 마스터 비밀번호를 사용해 주세요."
+                detail="[게스트 제한] 하루 최대 6회만 검색 가능합니다. 마스터 비밀번호를 사용해 주세요."
             )
             
         guest_rate_limits[ip]["timestamps"].append(now)
@@ -1157,8 +1157,8 @@ async def diagnose_blog_post(
         today = date.today()
         count = guest_rate_limits[ip]["daily_count"][today]
         result["guest_info"] = {
-            "remaining": max(0, 10 - count),
-            "limit": 10
+            "remaining": max(0, 6 - count),
+            "limit": 6
         }
         
     return result
@@ -1407,28 +1407,26 @@ async def get_blog_index_profile(
             headers_pc = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
-            # 50개를 수집하기 위해 1페이지(30개)와 2페이지(30개)를 순차 호출
-            url_p1 = f"https://blog.naver.com/PostTitleListAsync.naver?blogId={blog_id}&viewDate=&categoryNo=&parentCategoryNo=&countPerPage=30&currentPage=1"
-            url_p2 = f"https://blog.naver.com/PostTitleListAsync.naver?blogId={blog_id}&viewDate=&categoryNo=&parentCategoryNo=&countPerPage=30&currentPage=2"
+            # 최근 30개를 수집하기 위해 1페이지(30개)만 호출
+            url_req = f"https://blog.naver.com/PostTitleListAsync.naver?blogId={blog_id}&viewDate=&categoryNo=&parentCategoryNo=&countPerPage=30&currentPage=1"
             
-            for url_req in [url_p1, url_p2]:
-                try:
-                    r = requests.get(url_req, headers=headers_pc, timeout=10)
-                    r.encoding = "utf-8"
-                    if r.status_code == 200:
-                        import json
-                        clean_t = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', r.text)
-                        data_p = json.loads(clean_t, strict=False)
-                        if data_p.get("resultCode") == "S":
-                            posts_all.extend(data_p.get("postList", []))
-                except Exception as e:
-                    print(f"Error fetching page: {e}")
+            try:
+                r = requests.get(url_req, headers=headers_pc, timeout=10)
+                r.encoding = "utf-8"
+                if r.status_code == 200:
+                    import json
+                    clean_t = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', r.text)
+                    data_p = json.loads(clean_t, strict=False)
+                    if data_p.get("resultCode") == "S":
+                        posts_all.extend(data_p.get("postList", []))
+            except Exception as e:
+                print(f"Error fetching page: {e}")
             return posts_all
             
         rec_list_raw = await loop.run_in_executor(executor, fetch_recent_posts_pc)
         
-        # 최대 50개 슬라이싱하여 메타 데이터 정제
-        for p in rec_list_raw[:50]:
+        # 최대 30개 슬라이싱하여 메타 데이터 정제
+        for p in rec_list_raw[:30]:
             title_enc = p.get("title", "")
             title = urllib.parse.unquote_plus(title_enc)
             title = BeautifulSoup(title, "html.parser").text
