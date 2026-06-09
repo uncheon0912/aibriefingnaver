@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미담공장 AX - 네이버 AI 브리핑 & AEO 실시간 키워드 진단기</title>
+    <title>블랭블랭 - 네이버 AI 브리핑 & AEO 실시간 키워드 진단기</title>
     <meta name="description" content="네이버 AI 브리핑(Generative Search) 노출 진단, 검색량 수집, 포화도 예측 및 AEO 분석을 한 번에 제공하는 프리미엄 지능형 검색 마케팅 분석기입니다.">
     <!-- Google Fonts Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,7 +26,7 @@
                 <div class="auth-icon-circle purple-neon">
                     <i class="fa-solid fa-lock"></i>
                 </div>
-                <h2>미담공장 AX 인증</h2>
+                <h2>블랭블랭 인증</h2>
                 <p>대시보드 접속을 위해 부여받은 비밀번호를 입력해 주세요.</p>
             </div>
             <form id="auth-form" class="auth-form">
@@ -49,7 +49,7 @@
         <aside class="app-sidebar glass-panel">
             <div class="sidebar-logo" id="logo-btn">
                 <i class="fa-solid fa-wand-magic-sparkles logo-icon"></i>
-                <span class="logo-text">미담공장 <span>AX</span></span>
+                <span class="logo-text">블랭블랭</span>
             </div>
             
             <nav class="sidebar-menu">
@@ -63,6 +63,10 @@
                 <a href="#" class="menu-item" id="menu-blog-diagnose">
                     <i class="fa-solid fa-chart-pie"></i>
                     <span>AI 추천 진단 (블로그)</span>
+                </a>
+                <a href="#" class="menu-item" id="menu-blog-index">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>블로그지수</span>
                 </a>
             </nav>
             
@@ -403,10 +407,198 @@
 
             <!-- 하단 푸터 -->
             <footer class="app-footer">
-                <p>&copy; 2026 미담공장 AX. All rights reserved. Powered by Naver Search Ad API.</p>
+                <p>&copy; 2026 블랭블랭. All rights reserved. Powered by Naver Search Ad API.</p>
             </footer>
         </div>
-    </div>
+
+                <!-- ==================== 뷰 3. 블로그지수 분석 뷰 ==================== -->
+                <div id="view-blog-index" class="view-panel hide">
+                    <section class="hero-section">
+                        <h1>블로그지수 진단 대시보드</h1>
+                        <p>블로그의 통계 지표, 최근 인기글, 포스팅 활성도 및 누락 상태를 다차원 분석하여 등급을 판정합니다.</p>
+                    </section>
+
+                    <!-- 블로그 주소/ID 입력 카드 -->
+                    <section class="search-card glass-panel" style="margin-bottom: 2rem;">
+                        <form id="blog-index-form" class="search-form">
+                            <div class="input-wrapper">
+                                <i class="fa-brands fa-blogger search-icon"></i>
+                                <input type="text" id="blog-index-input" placeholder="네이버 블로그 주소 또는 ID 입력 (예: bigmoneyhouse)" required autocomplete="off">
+                            </div>
+                            <button type="submit" class="btn-submit">
+                                <span>종합 분석 실행</span>
+                                <i class="fa-solid fa-circle-notch spinner-icon hide" id="blog-index-spinner"></i>
+                            </button>
+                        </form>
+                    </section>
+
+                    <!-- 수집/분석 로딩 상태 -->
+                    <div id="blog-index-loading-state" class="loading-state hide">
+                        <div class="neural-loader">
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                            <div class="dot"></div>
+                        </div>
+                        <p class="loading-text" id="blog-index-loading-txt">네이버 블로그 데이터 및 최근 포스팅 15개 수집 중...</p>
+                        <!-- 분석 단계별 프로그레스바 -->
+                        <div class="progress-bar-wrapper" style="width: 100%; max-width: 400px; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; margin: 1rem auto; overflow: hidden; position: relative;">
+                            <div class="progress-bar-fill" id="blog-index-progress-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-purple) 0%, var(--neon-blue) 100%); transition: width 0.3s ease; box-shadow: 0 0 8px var(--neon-purple);"></div>
+                        </div>
+                        <p class="progress-percentage" id="blog-index-progress-percent" style="font-family: 'Outfit'; font-size: 0.9rem; color: var(--neon-blue); font-weight: 700;">0%</p>
+                    </div>
+
+                    <!-- 분석 결과 영역 -->
+                    <div id="blog-index-result-container" class="hide">
+                        <!-- 3열 와이드 대시보드 탑 -->
+                        <div class="blog-index-grid">
+                            
+                            <!-- 1열: 좌측 프로필 보드 -->
+                            <div class="glass-panel profile-panel">
+                                <div class="profile-header">
+                                    <div class="profile-avatar-container">
+                                        <img id="blog-profile-img" src="https://ssl.pstatic.net/static/blog/img/profile/profile_default_90.png" alt="프로필 이미지" referrerpolicy="no-referrer">
+                                    </div>
+                                    <h3 id="blog-nickname">머니라함의 미담공장</h3>
+                                    <span class="category-badge" id="blog-directory">건강·의학</span>
+                                </div>
+                                <div class="profile-meta-list">
+                                    <div class="profile-meta-item">
+                                        <span class="meta-label"><i class="fa-solid fa-user-group"></i> 이웃 수</span>
+                                        <span class="meta-value" id="blog-subscribers">0</span>
+                                    </div>
+                                    <div class="profile-meta-item">
+                                        <span class="meta-label"><i class="fa-solid fa-users"></i> 오늘 방문자</span>
+                                        <span class="meta-value text-glow-green" id="blog-today-visitors">0</span>
+                                    </div>
+                                    <div class="profile-meta-item">
+                                        <span class="meta-label"><i class="fa-solid fa-chart-line"></i> 누적 방문자</span>
+                                        <span class="meta-value" id="blog-total-visitors">0</span>
+                                    </div>
+                                    <div class="profile-meta-item">
+                                        <span class="meta-label"><i class="fa-solid fa-file-lines"></i> 총 포스팅 수</span>
+                                        <span class="meta-value" id="blog-total-posts">0</span>
+                                    </div>
+                                    <div class="profile-meta-item">
+                                        <span class="meta-label"><i class="fa-solid fa-calendar-day"></i> 최초 생성일</span>
+                                        <span class="meta-value" id="blog-created-date">0000-00-00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2열: 가운데 지수 & 차트 보드 -->
+                            <div class="glass-panel score-panel">
+                                <div class="score-header">
+                                    <h2>블로그 종합 등급</h2>
+                                </div>
+                                <div class="score-circle-wrapper">
+                                    <svg class="progress-ring" width="160" height="160">
+                                        <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="12" fill="transparent" r="70" cx="80" cy="80"/>
+                                        <circle class="progress-ring__circle" id="score-ring" stroke="url(#neon-purple-grad)" stroke-width="12" fill="transparent" r="70" cx="80" cy="80" stroke-dasharray="439.82" stroke-dashoffset="439.82"/>
+                                        <defs>
+                                            <linearGradient id="neon-purple-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <stop offset="0%" stop-color="#a855f7" />
+                                                <stop offset="100%" stop-color="#3b82f6" />
+                                            </linearGradient>
+                                        </defs>
+                                    </svg>
+                                    <div class="score-content">
+                                        <span class="score-number" id="blog-score-num">0</span>
+                                        <span class="score-grade" id="blog-grade-text">저품질</span>
+                                    </div>
+                                </div>
+                                <div class="chart-bars-container">
+                                    <div class="chart-bar-item">
+                                        <div class="chart-bar-labels">
+                                            <span>최적 포스팅</span>
+                                            <span id="stat-optimal-cnt">0건 (0%)</span>
+                                        </div>
+                                        <div class="chart-bar-track">
+                                            <div class="chart-bar-fill optimal-fill" id="stat-optimal-bar" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="chart-bar-item">
+                                        <div class="chart-bar-labels">
+                                            <span>활성 포스팅</span>
+                                            <span id="stat-active-cnt">0건 (0%)</span>
+                                        </div>
+                                        <div class="chart-bar-track">
+                                            <div class="chart-bar-fill active-fill" id="stat-active-bar" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="chart-bar-item">
+                                        <div class="chart-bar-labels">
+                                            <span>위험 포스팅</span>
+                                            <span id="stat-warning-cnt">0건 (0%)</span>
+                                        </div>
+                                        <div class="chart-bar-track">
+                                            <div class="chart-bar-fill warning-fill" id="stat-warning-bar" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="chart-bar-item">
+                                        <div class="chart-bar-labels">
+                                            <span>누락 포스팅</span>
+                                            <span id="stat-missing-cnt">0건 (0%)</span>
+                                        </div>
+                                        <div class="chart-bar-track">
+                                            <div class="chart-bar-fill missing-fill" id="stat-missing-bar" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3열: 우측 인기 포스트 보드 -->
+                            <div class="glass-panel popular-panel">
+                                <div class="popular-header">
+                                    <h2>최근 7일 인기글 TOP 10</h2>
+                                </div>
+                                <div class="popular-list" id="popular-posts-list">
+                                    <div class="empty-state-small">인기글 내역이 없습니다.</div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- 하단 상세 분석 리스트 테이블 -->
+                        <div class="glass-panel post-table-panel" style="margin-top: 2rem;">
+                            <div class="table-header-wrapper">
+                                <h2>최신 포스팅 상세 분석</h2>
+                                <div class="filter-tabs">
+                                    <button class="filter-tab active" data-filter="all">전체 (<span id="filter-all-cnt">0</span>)</button>
+                                    <button class="filter-tab" data-filter="최적">최적 (<span id="filter-optimal-cnt">0</span>)</button>
+                                    <button class="filter-tab" data-filter="활성">활성 (<span id="filter-active-cnt">0</span>)</button>
+                                    <button class="filter-tab" data-filter="위험">위험 (<span id="filter-warning-cnt">0</span>)</button>
+                                    <button class="filter-tab" data-filter="누락">누락 (<span id="filter-missing-cnt">0</span>)</button>
+                                </div>
+                            </div>
+                            <div class="table-scroll-container">
+                                <table class="blog-index-table">
+                                    <thead>
+                                        <tr>
+                                            <th>노출상태</th>
+                                            <th>순위</th>
+                                            <th>제목</th>
+                                            <th>카테고리</th>
+                                            <th>발행일</th>
+                                            <th>글자수</th>
+                                            <th>이미지수</th>
+                                            <th>영상수</th>
+                                            <th>인용구수</th>
+                                            <th>GIF</th>
+                                            <th>지도</th>
+                                            <th>외부링크</th>
+                                            <th>댓글</th>
+                                            <th>공감</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="blog-index-table-body">
+                                        <!-- 동적 렌더링 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
     
     <!-- AEO 실시간 상세 분석 팝업 모달 -->
     <div id="aeo-detail-modal" class="modal-overlay hide">
@@ -537,7 +729,7 @@
             
             <div style="display: flex; align-items: center; gap: 0.6rem; font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; color: #ffffff;">
                 <i class="fa-solid fa-wand-magic-sparkles" style="color: #9d4edd;"></i>
-                <span>미담공장 <span style="color: #00b4d8;">AX</span></span>
+                <span>블랭블랭</span>
             </div>
             
             <div style="margin-top: 2rem; text-align: left; z-index: 10;">
@@ -556,7 +748,7 @@
                     <div><strong style="color: #ffffff; margin-right: 0.5rem;">진단 일자:</strong> <span id="pdf-report-date" style="color: #ffffff;">-</span></div>
                 </div>
                 <div style="text-align: right;">
-                    <strong style="color: #ffffff;">발행처:</strong> 미담공장 AX 지능형 마케팅 전략 연구소
+                    <strong style="color: #ffffff;">발행처:</strong> 블랭블랭 지능형 마케팅 전략 연구소
                 </div>
             </div>
         </div>
@@ -566,7 +758,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.2rem;">
                     <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">01. 현황 진단 및 종합 평가 (Performance & General Review)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 리포트</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 리포트</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 1.5rem;">귀사 브랜드 블로그 AEO 노출 성과 지표</h2>
@@ -606,7 +798,7 @@
                             네이버 생성형 검색(AI 브리핑) 도입 이후, 사용자 검색 행태는 단순 키워드 매칭에서 구체적 질문으로 변모하고 있습니다. 현재 귀사 블로그의 최적화 수준은 미흡(C-Grade) 수준으로 스캔되어, 경쟁사 대비 추천 노출 경쟁력이 현격히 저하된 원인을 긴급 진단 및 보완해야 합니다.
                         </div>
                         <p style="font-size: 0.78rem; color: #777777; line-height: 1.5; margin: 0;">
-                            * 본 평가는 미담공장 AX 지능형 검색 최적화 기술연구소의 특허받은 인텐트 채택 분석 기준 및 HyperCLOVA X 정보 추출 가독성 지표를 종합 합산하여 동적으로 판정되었습니다.
+                            * 본 평가는 블랭블랭 지능형 검색 최적화 기술연구소의 특허받은 인텐트 채택 분석 기준 및 HyperCLOVA X 정보 추출 가독성 지표를 종합 합산하여 동적으로 판정되었습니다.
                         </p>
                     </div>
                 </div>
@@ -623,7 +815,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">
                     <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">02. 세부 포스팅 분석 매트릭스 (Detailed Diagnostics Matrix)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 리포트</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 리포트</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 0.8rem;">귀사 포스팅별 AI 브리핑 스캔 결과</h2>
@@ -662,7 +854,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">
                     <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">03. AI 노출 저해요인 및 병목 진단 (Deep Bottleneck Analysis)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 리포트</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 리포트</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 0.8rem;">귀사 콘텐츠의 AI 검색 로봇 수집 병목 요인</h2>
@@ -701,7 +893,7 @@
                                 <th style="padding: 0.5rem; color: #495057; width: 25%;">알고리즘 평가 기준</th>
                                 <th style="padding: 0.5rem; color: #495057; width: 45%;">핵심 평가 항목</th>
                                 <th style="padding: 0.5rem; color: #ff3b30; width: 15%; text-align: center;">귀사 블로그 평점</th>
-                                <th style="padding: 0.5rem; color: #38b000; width: 15%; text-align: center;">미담공장 AX 기준</th>
+                                <th style="padding: 0.5rem; color: #38b000; width: 15%; text-align: center;">블랭블랭 기준</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -738,11 +930,11 @@
         <div class="pdf-page" id="pdf-page-5" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2.2rem;">
-                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">04. 미담공장 AX 도입 전후 비교 및 성과 모델 (Performance Gap Analysis)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 제안서</span>
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">04. 블랭블랭 도입 전후 비교 및 성과 모델 (Performance Gap Analysis)</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 제안서</span>
                 </div>
                 
-                <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 1rem;">미담공장 AX 최적화 솔루션 적용 효과 및 성과 모델</h2>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 1rem;">블랭블랭 최적화 솔루션 적용 효과 및 성과 모델</h2>
                 
                 <div style="display: flex; gap: 2rem;">
                     <!-- 좌측: 도입 전 (BEFORE) -->
@@ -763,7 +955,7 @@
                     <div style="flex: 1; background: #f4fbf7; border: 1px solid #d3f4e4; border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <span style="background: #38b000; color: #ffffff; font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.6rem; border-radius: 20px;">AFTER</span>
-                            <strong style="font-size: 1.05rem; color: #38b000;">미담공장 AX 지능형 AEO/GEO 포스팅</strong>
+                            <strong style="font-size: 1.05rem; color: #38b000;">블랭블랭 지능형 AEO/GEO 포스팅</strong>
                         </div>
                         <ul style="font-size: 0.8rem; color: #495057; padding-left: 1.2rem; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; line-height: 1.5;">
                             <li><strong>HTML 테이블 및 마크업 최적화:</strong> AI 엔진이 핵심 답변을 신속 수집하여 최상단 AI 요약 카드에 추천.</li>
@@ -792,8 +984,8 @@
         <div class="pdf-page" id="pdf-page-6" style="width: 1123px; height: 794px; padding: 4rem; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; background: #ffffff; color: #2d2d2d;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 1rem; margin-bottom: 2rem;">
-                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">05. 미담공장 AX 지능형 최적화 솔루션 (Intelligent Optimization Services)</span>
-                    <span style="font-size: 0.88rem; color: #888888;">미담공장 AX AEO 제안서</span>
+                    <span style="font-size: 0.88rem; font-weight: 700; color: #7b2cbf;">05. 블랭블랭 지능형 최적화 솔루션 (Intelligent Optimization Services)</span>
+                    <span style="font-size: 0.88rem; color: #888888;">블랭블랭 AEO 제안서</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #111111; margin-bottom: 0.8rem;">귀사의 AI 검색 트래픽 점유를 위한 전략 제안</h2>
@@ -837,7 +1029,7 @@
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 2.2rem;">
                     <span style="font-size: 0.88rem; font-weight: 700; color: #00b4d8;">06. 추진 로드맵 및 파트너십 (Roadmap & Partnership)</span>
-                    <span style="font-size: 0.88rem; color: #a69ebd;">미담공장 AX 제안서</span>
+                    <span style="font-size: 0.88rem; color: #a69ebd;">블랭블랭 제안서</span>
                 </div>
                 
                 <h2 style="font-size: 1.8rem; font-weight: 800; color: #ffffff; margin-bottom: 0.8rem;">지능형 검색 노출 극대화 4단계 추진 로드맵</h2>
@@ -875,7 +1067,7 @@
                 <h3 style="font-size: 1.1rem; font-weight: 700; color: #ffffff; margin-bottom: 0.35rem;">귀사의 마케팅 자산을 AI 시대의 강력한 트래픽 엔진으로 변환해 드립니다</h3>
                 <p style="font-size: 0.85rem; color: #dfc2ff; margin-bottom: 0px; line-height: 1.45;">
                     본 분석 제안서를 기반으로 하여 귀사 브랜드 블로그에 맞춘 개별 마케팅 타겟 처방전을 무상으로 지원해 드립니다.<br>
-                    <strong>지금 미담공장 AX 전략분석팀에 정밀 컨설팅을 의뢰해 보십시오.</strong> (협력 문의: contact@mydamgong.co.kr)
+                    <strong>지금 블랭블랭 전략분석팀에 정밀 컨설팅을 의뢰해 보십시오.</strong> (협력 문의: contact@mydamgong.co.kr)
                 </p>
             </div>
             

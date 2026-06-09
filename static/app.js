@@ -102,8 +102,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // 뷰 전환 관련 엘리먼트
     const menuKeywordAnalyzer = document.getElementById("menu-keyword-analyzer");
     const menuBlogDiagnose = document.getElementById("menu-blog-diagnose");
+    const menuBlogIndex = document.getElementById("menu-blog-index");
     const viewKeywordAnalyzer = document.getElementById("view-keyword-analyzer");
     const viewBlogDiagnose = document.getElementById("view-blog-diagnose");
+    const viewBlogIndex = document.getElementById("view-blog-index");
 
     // 기존 키워드 검색용 엘리먼트
     const searchForm = document.getElementById("search-form");
@@ -185,21 +187,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const pageSize = 30;
 
     // 0. 사이드바 메뉴 탭 전환 바인딩
-    menuKeywordAnalyzer.addEventListener("click", (e) => {
-        e.preventDefault();
-        menuKeywordAnalyzer.classList.add("active");
-        menuBlogDiagnose.classList.remove("active");
-        viewKeywordAnalyzer.classList.remove("hide");
-        viewBlogDiagnose.classList.add("hide");
-    });
+    function switchTab(activeMenu, activeView) {
+        [menuKeywordAnalyzer, menuBlogDiagnose, menuBlogIndex].forEach(m => {
+            if (m) m.classList.remove("active");
+        });
+        [viewKeywordAnalyzer, viewBlogDiagnose, viewBlogIndex].forEach(v => {
+            if (v) v.classList.add("hide");
+        });
+        if (activeMenu) activeMenu.classList.add("active");
+        if (activeView) activeView.classList.remove("hide");
+    }
 
-    menuBlogDiagnose.addEventListener("click", (e) => {
-        e.preventDefault();
-        menuBlogDiagnose.classList.add("active");
-        menuKeywordAnalyzer.classList.remove("active");
-        viewBlogDiagnose.classList.remove("hide");
-        viewKeywordAnalyzer.classList.add("hide");
-    });
+    if (menuKeywordAnalyzer) {
+        menuKeywordAnalyzer.addEventListener("click", (e) => {
+            e.preventDefault();
+            switchTab(menuKeywordAnalyzer, viewKeywordAnalyzer);
+        });
+    }
+
+    if (menuBlogDiagnose) {
+        menuBlogDiagnose.addEventListener("click", (e) => {
+            e.preventDefault();
+            switchTab(menuBlogDiagnose, viewBlogDiagnose);
+        });
+    }
+
+    if (menuBlogIndex) {
+        menuBlogIndex.addEventListener("click", (e) => {
+            e.preventDefault();
+            switchTab(menuBlogIndex, viewBlogIndex);
+        });
+    }
 
     // 게스트 / 마스터 배지 처리용 엘리먼트
     const headerBadgeContainer = document.getElementById("header-badge-container");
@@ -1480,7 +1498,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     grade = "C-Grade (미흡 / 긴급 튜닝 필요)";
                     gradeColor = "#ff3b30";
-                    diagSummary = `귀사 블로그의 AI 검색 최적화 상태는 <strong>매우 미흡(C-Grade)</strong>한 위험군으로 파악됩니다. 전통적인 뷰/블로그 탭에는 일부 글이 노출되고 있으나, 네이버 검색 최상단을 점유하고 있는 AI 브리핑 영역에는 추천 출처가 거의 잡히지 않고 있습니다. 로봇이 정보를 독해(MR)할 수 없는 단순 줄글 중심의 작성 방식과 E-E-A-T 신뢰 출처 표기 누락이 누적된 결과입니다. 미담공장 AX의 맞춤형 AEO 포스팅 서비스 도입이 시급히 요구됩니다.`;
+                    diagSummary = `귀사 블로그의 AI 검색 최적화 상태는 <strong>매우 미흡(C-Grade)</strong>한 위험군으로 파악됩니다. 전통적인 뷰/블로그 탭에는 일부 글이 노출되고 있으나, 네이버 검색 최상단을 점유하고 있는 AI 브리핑 영역에는 추천 출처가 거의 잡히지 않고 있습니다. 로봇이 정보를 독해(MR)할 수 없는 단순 줄글 중심의 작성 방식과 E-E-A-T 신뢰 출처 표기 누락이 누적된 결과입니다. 블랭블랭의 맞춤형 AEO 포스팅 서비스 도입이 시급히 요구됩니다.`;
                 }
                 
                 document.getElementById("pdf-diag-grade").innerHTML = grade;
@@ -1620,6 +1638,395 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         if (e.target === premiumUpgradeModal) {
             premiumUpgradeModal.classList.add("hide");
+        }
+    });
+
+    // ==========================================================================
+    // 블로그지수 분석 대시보드 인터랙션 엔진
+    // ==========================================================================
+    const blogIndexForm = document.getElementById("blog-index-form");
+    const blogIndexInput = document.getElementById("blog-index-input");
+    const blogIndexSpinner = document.getElementById("blog-index-spinner");
+    const blogIndexLoadingState = document.getElementById("blog-index-loading-state");
+    const blogIndexLoadingTxt = document.getElementById("blog-index-loading-txt");
+    const blogIndexProgressFill = document.getElementById("blog-index-progress-fill");
+    const blogIndexProgressPercent = document.getElementById("blog-index-progress-percent");
+    const blogIndexResultContainer = document.getElementById("blog-index-result-container");
+
+    // 프로필 DOM
+    const blogProfileImg = document.getElementById("blog-profile-img");
+    const blogNickname = document.getElementById("blog-nickname");
+    const blogDirectory = document.getElementById("blog-directory");
+    const blogSubscribers = document.getElementById("blog-subscribers");
+    const blogTodayVisitors = document.getElementById("blog-today-visitors");
+    const blogTotalVisitors = document.getElementById("blog-total-visitors");
+    const blogTotalPosts = document.getElementById("blog-total-posts");
+    const blogCreatedDate = document.getElementById("blog-created-date");
+
+    // 차트 / 등급 DOM
+    const scoreRing = document.getElementById("score-ring");
+    const blogScoreNum = document.getElementById("blog-score-num");
+    const blogGradeText = document.getElementById("blog-grade-text");
+
+    const statOptimalCnt = document.getElementById("stat-optimal-cnt");
+    const statOptimalBar = document.getElementById("stat-optimal-bar");
+    const statActiveCnt = document.getElementById("stat-active-cnt");
+    const statActiveBar = document.getElementById("stat-active-bar");
+    const statWarningCnt = document.getElementById("stat-warning-cnt");
+    const statWarningBar = document.getElementById("stat-warning-bar");
+    const statMissingCnt = document.getElementById("stat-missing-cnt");
+    const statMissingBar = document.getElementById("stat-missing-bar");
+
+    const popularPostsList = document.getElementById("popular-posts-list");
+    const blogIndexTableBody = document.getElementById("blog-index-table-body");
+
+    // 필터 카운터 DOM
+    const filterAllCnt = document.getElementById("filter-all-cnt");
+    const filterOptimalCnt = document.getElementById("filter-optimal-cnt");
+    const filterActiveCnt = document.getElementById("filter-active-cnt");
+    const filterWarningCnt = document.getElementById("filter-warning-cnt");
+    const filterMissingCnt = document.getElementById("filter-missing-cnt");
+
+    let blogPostsData = []; // 수집/진단 완료된 15개 포스팅 전체 데이터 어레이
+
+    // 원형 게이지 차트 채우기 애니메이션
+    function setScoreRing(score) {
+        if (!scoreRing) return;
+        const radius = scoreRing.r.baseVal.value;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (score / 100) * circumference;
+        scoreRing.style.strokeDasharray = `${circumference} ${circumference}`;
+        scoreRing.style.strokeDashoffset = offset;
+    }
+
+    if (blogIndexForm) {
+        blogIndexForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            let rawVal = blogIndexInput.value.trim();
+            if (!rawVal) {
+                alert("네이버 블로그 주소 또는 ID를 입력해 주세요.");
+                return;
+            }
+
+            // 블로그 ID 파싱
+            let blogId = rawVal;
+            const regexBlogUrl = /blog\.naver\.com\/([a-zA-Z0-9_-]+)/;
+            const match = rawVal.match(regexBlogUrl);
+            if (match) {
+                blogId = match[1];
+            } else if (rawVal.includes("blogId=")) {
+                const urlParams = new URLSearchParams(rawVal.split("?")[1] || "");
+                blogId = urlParams.get("blogId") || blogId;
+            }
+
+            blogId = blogId.replace(/https?:\/\//g, "").split("/")[0] === "m.blog.naver.com" ? rawVal.split("/")[3] || blogId : blogId;
+            blogId = blogId.trim();
+
+            // UI 초기화
+            blogIndexSpinner.classList.remove("hide");
+            blogIndexLoadingState.classList.remove("hide");
+            blogIndexResultContainer.classList.add("hide");
+            blogIndexLoadingTxt.textContent = "네이버 블로그 상태 및 프로필 메타 데이터를 수집 중입니다...";
+            blogIndexProgressFill.style.width = "0%";
+            blogIndexProgressPercent.textContent = "0%";
+
+            try {
+                // 1. 프로필 & 인기글 & 최근글 기본 목록 가져오기
+                const profileRes = await fetch(`/api/blog/index/profile?blog_id=${blogId}`);
+                if (!profileRes.ok) {
+                    throw new Error("블로그 기본 프로필 정보를 가져오지 못했습니다. ID가 정확한지 확인해 주세요.");
+                }
+
+                const profileData = await profileRes.json();
+
+                // 프로필 매핑
+                if (blogProfileImg) blogProfileImg.src = profileData.profile_image;
+                if (blogNickname) blogNickname.textContent = profileData.nickname;
+                if (blogDirectory) blogDirectory.textContent = profileData.directory_name;
+                if (blogSubscribers) blogSubscribers.textContent = profileData.subscriber_count.toLocaleString();
+                if (blogTodayVisitors) blogTodayVisitors.textContent = profileData.today_visitor.toLocaleString();
+                if (blogTotalVisitors) blogTotalVisitors.textContent = profileData.total_visitor.toLocaleString();
+                if (blogTotalPosts) blogTotalPosts.textContent = profileData.post_count.toLocaleString();
+                if (blogCreatedDate) blogCreatedDate.textContent = profileData.created_date || "정보 없음";
+
+                // 인기글 매핑
+                let popHtml = "";
+                if (profileData.popular_posts && profileData.popular_posts.length > 0) {
+                    profileData.popular_posts.forEach((p, idx) => {
+                        popHtml += `
+                            <a href="${p.link}" target="_blank" class="popular-item-card">
+                                <span class="pop-badge top-${idx + 1}">${idx + 1}</span>
+                                <div class="pop-info">
+                                    <span class="pop-title">${p.title}</span>
+                                    <div class="pop-stats">
+                                        <span><i class="fa-regular fa-comment"></i> ${p.comment_count}</span>
+                                        <span><i class="fa-regular fa-heart"></i> ${p.sympathy_count}</span>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                    });
+                } else {
+                    popHtml = `<div class="empty-state-small">인기글 내역이 없습니다.</div>`;
+                }
+                if (popularPostsList) popularPostsList.innerHTML = popHtml;
+
+                // 최근 15개 포스팅 목록 확인
+                const recentPosts = profileData.recent_posts || [];
+                if (recentPosts.length === 0) {
+                    throw new Error("블로그에 작성된 포스팅 글을 찾을 수 없습니다.");
+                }
+
+                blogPostsData = [];
+                const totalPostsCount = recentPosts.length;
+
+                // 2. 15개 포스트 개별 상세 지수 수집 (Throttling 순차 비동기 호출)
+                for (let i = 0; i < totalPostsCount; i++) {
+                    const post = recentPosts[i];
+                    
+                    // 로딩 텍스트 갱신
+                    blogIndexLoadingTxt.innerHTML = `
+                        <strong>[${i + 1}/${totalPostsCount}] 포스팅 정밀 진단 중...</strong><br>
+                        <span style="font-size: 0.82rem; opacity: 0.8; color: var(--text-secondary); max-width: 300px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${post.title}
+                        </span>
+                    `;
+
+                    // 백엔드 개별 상세 API 호출
+                    const detailRes = await fetch(`/api/blog/index/post-detail?blog_id=${blogId}&log_no=${post.log_no}&title=${encodeURIComponent(post.title)}`);
+                    if (detailRes.ok) {
+                        const detailData = await detailRes.json();
+                        // 메타 데이터와 상세 데이터 결합
+                        blogPostsData.push({
+                            ...post,
+                            ...detailData
+                        });
+                    } else {
+                        // API 에러 시 안전한 기본값으로 결합
+                        blogPostsData.push({
+                            ...post,
+                            chars_count: 0,
+                            images_count: 0,
+                            videos_count: 0,
+                            quotes_count: 0,
+                            gifs_count: 0,
+                            maps_count: 0,
+                            links_count: 0,
+                            exposure: "X",
+                            rank: "-",
+                            status: "누락"
+                        });
+                    }
+
+                    // 프로그레스 바 갱신
+                    const percent = Math.round(((i + 1) / totalPostsCount) * 100);
+                    if (blogIndexProgressFill) blogIndexProgressFill.style.width = `${percent}%`;
+                    if (blogIndexProgressPercent) blogIndexProgressPercent.textContent = `${percent}%`;
+
+                    // 마지막 루프가 아니면 1.2초 Throttling 딜레이 부여
+                    if (i < totalPostsCount - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1200));
+                    }
+                }
+
+                // 3. 진단 종합 점수 연산 및 차트 렌더링
+                let optimalCount = 0;
+                let activeCount = 0;
+                let warningCount = 0;
+                let missingCount = 0;
+
+                let totalChars = 0;
+                let totalImages = 0;
+                let totalLikesComments = 0;
+
+                blogPostsData.forEach(p => {
+                    if (p.status === "최적") optimalCount++;
+                    else if (p.status === "활성") activeCount++;
+                    else if (p.status === "위험") warningCount++;
+                    else missingCount++;
+
+                    totalChars += p.chars_count || 0;
+                    totalImages += p.images_count || 0;
+                    totalLikesComments += (p.comment_count || 0) + (p.sympathy_count || 0);
+                });
+
+                const optimalRatio = Math.round((optimalCount / totalPostsCount) * 100);
+                const activeRatio = Math.round((activeCount / totalPostsCount) * 100);
+                const warningRatio = Math.round((warningCount / totalPostsCount) * 100);
+                const missingRatio = Math.round((missingCount / totalPostsCount) * 100);
+
+                // 통계 바 갱신
+                if (statOptimalCnt) statOptimalCnt.textContent = `${optimalCount}건 (${optimalRatio}%)`;
+                if (statOptimalBar) statOptimalBar.style.width = `${optimalRatio}%`;
+                
+                if (statActiveCnt) statActiveCnt.textContent = `${activeCount}건 (${activeRatio}%)`;
+                if (statActiveBar) statActiveBar.style.width = `${activeRatio}%`;
+                
+                if (statWarningCnt) statWarningCnt.textContent = `${warningCount}건 (${warningRatio}%)`;
+                if (statWarningBar) statWarningBar.style.width = `${warningRatio}%`;
+                
+                if (statMissingCnt) statMissingCnt.textContent = `${missingCount}건 (${missingRatio}%)`;
+                if (statMissingBar) statMissingBar.style.width = `${missingRatio}%`;
+
+                // 점수 계산 (독창적 알고리즘)
+                // 1) 활성 지수 (100점 만점)
+                const avgChars = totalChars / totalPostsCount;
+                const avgImages = totalImages / totalPostsCount;
+                const avgResponse = totalLikesComments / totalPostsCount;
+
+                let activeScore = 0;
+                if (avgChars >= 1500) activeScore += 30;
+                else if (avgChars >= 1000) activeScore += 20;
+                else if (avgChars >= 500) activeScore += 10;
+
+                if (avgImages >= 10) activeScore += 30;
+                else if (avgImages >= 5) activeScore += 20;
+                else if (avgImages >= 3) activeScore += 10;
+
+                if (avgResponse >= 3) activeScore += 40;
+                else if (avgResponse >= 1) activeScore += 35;
+                else if (avgResponse >= 0.5) activeScore += 20;
+                else activeScore += 5;
+
+                // 2) 누락 감점 비율 (0~100)
+                const missingPenalty = (missingCount / totalPostsCount) * 100;
+
+                // 3) 위험 감점 비율 (0~100)
+                const warningPenalty = (warningCount / totalPostsCount) * 100;
+
+                // 종합 지수 합산 (가중치 적용)
+                let finalScore = Math.round((activeScore * 0.4) + ((100 - missingPenalty) * 0.4) + ((100 - warningPenalty) * 0.2));
+                finalScore = Math.max(5, Math.min(100, finalScore)); // 5점~100점 제한
+
+                // 등급 판정
+                let gradeText = "저품질";
+                if (finalScore < 30 || missingRatio >= 60) {
+                    gradeText = "저품질";
+                } else if (finalScore < 80) {
+                    // 준최 1~7 분할
+                    const junLevel = Math.ceil((finalScore - 29) / 7.15); // 30점부터 80점 미만 구간
+                    gradeText = `준최 ${Math.max(1, Math.min(7, junLevel))}`;
+                } else {
+                    // 최적 1~4 분할
+                    const optLevel = Math.ceil((finalScore - 79) / 5); // 80점부터 100점 구간
+                    gradeText = `최적 ${Math.max(1, Math.min(4, optLevel))}`;
+                }
+
+                // 점수 서클 노출
+                if (blogScoreNum) blogScoreNum.textContent = finalScore;
+                if (blogGradeText) {
+                    blogGradeText.textContent = gradeText;
+                    // 등급에 따라 네온 색상 다르게 노출
+                    if (gradeText.includes("최적")) {
+                        blogGradeText.style.color = "var(--neon-purple)";
+                        blogGradeText.style.textShadow = "0 0 10px var(--neon-purple-glow)";
+                    } else if (gradeText.includes("준최")) {
+                        blogGradeText.style.color = "var(--neon-green)";
+                        blogGradeText.style.textShadow = "0 0 10px var(--neon-green-glow)";
+                    } else {
+                        blogGradeText.style.color = "#ff3b30";
+                        blogGradeText.style.textShadow = "0 0 10px rgba(255, 59, 48, 0.4)";
+                    }
+                }
+                setScoreRing(finalScore);
+
+                // 4. 하단 상세 테이블 렌더링
+                renderBlogIndexTable("all");
+
+                // 필터 탭 클릭 이벤트 바인딩
+                const filterTabs = document.querySelectorAll(".filter-tab");
+                filterTabs.forEach(tab => {
+                    tab.classList.remove("active");
+                    if (tab.getAttribute("data-filter") === "all") {
+                        tab.classList.add("active");
+                    }
+                });
+
+                // 결과창 보이기
+                blogIndexResultContainer.classList.remove("hide");
+
+            } catch (err) {
+                console.error(err);
+                alert("블로그지수 분석 실행 중 오류가 발생했습니다: " + err.message);
+            } finally {
+                blogIndexSpinner.classList.add("hide");
+                blogIndexLoadingState.classList.add("hide");
+            }
+        });
+    }
+
+    // 블로그지수 테이블 데이터 렌더링 함수
+    function renderBlogIndexTable(filter = "all") {
+        if (!blogIndexTableBody) return;
+
+        let html = "";
+        let optimalCount = 0;
+        let activeCount = 0;
+        let warningCount = 0;
+        let missingCount = 0;
+
+        blogPostsData.forEach(p => {
+            if (p.status === "최적") optimalCount++;
+            else if (p.status === "활성") activeCount++;
+            else if (p.status === "위험") warningCount++;
+            else missingCount++;
+
+            // 필터링 적용
+            const isVisible = (filter === "all" || p.status === filter);
+            const hiddenClass = isVisible ? "" : "class='row-hidden'";
+
+            let statusBadge = `<span class="idx-badge missing">누락</span>`;
+            if (p.status === "최적") {
+                statusBadge = `<span class="idx-badge optimal">최적</span>`;
+            } else if (p.status === "활성") {
+                statusBadge = `<span class="idx-badge active">활성</span>`;
+            } else if (p.status === "위험") {
+                statusBadge = `<span class="idx-badge warning">위험</span>`;
+            }
+
+            html += `
+                <tr ${hiddenClass}>
+                    <td>${statusBadge}</td>
+                    <td style="font-family:'Outfit'; font-weight: 700; color:${p.rank !== '-' ? 'var(--neon-purple)' : '#ff3b30'}">${p.rank}</td>
+                    <td>
+                        <span class="table-post-title" title="${p.title}">${p.title}</span>
+                        <a href="${p.link}" target="_blank" class="table-post-link"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </td>
+                    <td><span class="category-badge">${p.category_name}</span></td>
+                    <td style="font-size:0.75rem; color:var(--text-secondary);">${p.pub_date}</td>
+                    <td><strong>${(p.chars_count || 0).toLocaleString()}자</strong></td>
+                    <td>${p.images_count || 0}개</td>
+                    <td>${p.videos_count || 0}개</td>
+                    <td>${p.quotes_count || 0}개</td>
+                    <td>${p.gifs_count > 0 ? `<span class="text-glow-green">${p.gifs_count}개</span>` : '-'}</td>
+                    <td>${p.maps_count > 0 ? `<span class="text-glow-blue"><i class="fa-solid fa-location-dot"></i> 있음</span>` : '-'}</td>
+                    <td>${p.links_count > 0 ? `<span class="text-glow-purple">${p.links_count}개</span>` : '-'}</td>
+                    <td>${p.comment_count || 0}</td>
+                    <td>${p.sympathy_count || 0}</td>
+                </tr>
+            `;
+        });
+
+        blogIndexTableBody.innerHTML = html;
+
+        // 필터 카운터 동기화
+        if (filterAllCnt) filterAllCnt.textContent = blogPostsData.length;
+        if (filterOptimalCnt) filterOptimalCnt.textContent = optimalCount;
+        if (filterActiveCnt) filterActiveCnt.textContent = activeCount;
+        if (filterWarningCnt) filterWarningCnt.textContent = warningCount;
+        if (filterMissingCnt) filterMissingCnt.textContent = missingCount;
+    }
+
+    // 필터 탭 클릭 핸들러 바인딩
+    document.addEventListener("click", (e) => {
+        if (e.target && e.target.classList.contains("filter-tab")) {
+            const tabs = document.querySelectorAll(".filter-tab");
+            tabs.forEach(t => t.classList.remove("active"));
+            
+            e.target.classList.add("active");
+            const filterValue = e.target.getAttribute("data-filter");
+            renderBlogIndexTable(filterValue);
         }
     });
 });

@@ -1163,6 +1163,406 @@ async def diagnose_blog_post(
         
     return result
 
+# ==========================================
+# 블랭블랭 블로그지수 분석 신규 API
+# ==========================================
+import math
+import urllib.parse
+
+# 블로그지수 캐시 스토리지
+blog_profile_cache = {}  # { blog_id: { "data": profile_data, "timestamp": datetime } }
+blog_post_detail_cache = {}  # { (blog_id, log_no): { "data": detail_data, "timestamp": datetime } }
+
+def check_naver_search_rank(blog_id: str, log_no: str, title: str) -> int:
+    # 제목 전체로 네이버 모바일 통합검색 호출
+    encoded_query = urllib.parse.quote(title)
+    url = f"https://m.search.naver.com/search.naver?query={encoded_query}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+    }
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code != 200:
+            return 0
+        html = res.text
+        
+        soup = BeautifulSoup(html, "html.parser")
+        links = soup.find_all("a")
+        
+        ranked_posts = []
+        seen_logs = set()
+        
+        for a in links:
+            href = a.get("href", "")
+            if not href:
+                continue
+            
+            m1 = re.search(r"blog\.naver\.com/([a-zA-Z0-9_-]+)/(\d+)", href)
+            if m1:
+                b_id = m1.group(1)
+                l_no = m1.group(2)
+                if l_no not in seen_logs:
+                    seen_logs.add(l_no)
+                    ranked_posts.append((b_id, l_no))
+                continue
+                
+            m2_id = re.search(r"blogId=([a-zA-Z0-9_-]+)", href)
+            m2_no = re.search(r"logNo=(\d+)", href)
+            if m2_id and m2_no:
+                b_id = m2_id.group(1)
+                l_no = m2_no.group(2)
+                if l_no not in seen_logs:
+                    seen_logs.add(l_no)
+                    ranked_posts.append((b_id, l_no))
+                continue
+        
+        for idx, (b_id, l_no) in enumerate(ranked_posts):
+            if l_no == log_no and b_id.lower() == blog_id.lower():
+                return idx + 1
+                
+        if log_no in html and blog_id in html:
+            return 1
+            
+        return 0
+    except Exception as e:
+        print(f"Error checking rank: {e}")
+        return 0
+
+def get_blog_creation_date(blog_id: str) -> str:
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    url = f"https://blog.naver.com/PostTitleListAsync.naver?blogId={blog_id}&viewDate=&categoryNo=&parentCategoryNo=&countPerPage=30&currentPage=1"
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        res.encoding = "utf-8"
+        if res.status_code != 200:
+            return "데이터 없음"
+            
+        import json
+        clean_text = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', res.text)
+        data = json.loads(clean_text, strict=False)
+        
+        total_count = int(data.get("totalCount", 0))
+        if total_count <= 0:
+            return "데이터 없음"
+            
+        last_page = math.ceil(total_count / 30)
+        
+        last_url = f"https://blog.naver.com/PostTitleListAsync.naver?blogId={blog_id}&viewDate=&categoryNo=&parentCategoryNo=&countPerPage=30&currentPage={last_page}"
+        res_last = requests.get(last_url, headers=headers, timeout=10)
+        res_last.encoding = "utf-8"
+        
+        if res_last.status_code == 200:
+            clean_text_last = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', res_last.text)
+            data_last = json.loads(clean_text_last, strict=False)
+            posts = data_last.get("postList", [])
+            if posts:
+                oldest_post = posts[-1]
+                add_date_raw = oldest_post.get("addDate", "").strip()
+                date_match = re.match(r"(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})", add_date_raw)
+                if date_match:
+                    year, month, day = date_match.groups()
+                    return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
+                return add_date_raw
+        return "데이터 없음"
+    except Exception as e:
+        print(f"Error fetching creation date: {e}")
+        return "데이터 없음"
+
+def scrape_blog_profile(blog_id: str):
+    url = f"https://m.blog.naver.com/{blog_id}"
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+    }
+    
+    nickname = blog_id
+    profile_image = "https://ssl.pstatic.net/static/blog/img/profile/profile_default_90.png"
+    directory_name = "미분류"
+    subscriber_count = 0
+    today_visitor = 0
+    total_visitor = 0
+    post_count = 0
+    
+    try:
+        res = requests.get(url, headers=headers, timeout=10)
+        res.encoding = "utf-8"
+        if res.status_code == 200:
+            html = res.text
+            match = re.search(r"window\.__INITIAL_STATE__\s*=\s*(\{.*?\});", html, re.DOTALL)
+            if match:
+                import json
+                state = json.loads(match.group(1))
+                blog_home = state.get("blogHome", {})
+                blog_info_dict = blog_home.get("blogHomeInfo", {}).get(blog_id, {}).get("data", {})
+                
+                if blog_info_dict:
+                    nickname = blog_info_dict.get("nickName", nickname)
+                    profile_image = blog_info_dict.get("profileImagePath", profile_image)
+                    directory_name = blog_info_dict.get("blogDirectoryName", directory_name)
+                    subscriber_count = blog_info_dict.get("subscriberCount", subscriber_count)
+                    today_visitor = blog_info_dict.get("dayVisitorCount", today_visitor)
+                    total_visitor = blog_info_dict.get("totalVisitorCount", total_visitor)
+                    
+                contents_count = blog_home.get("blogContentsCount", {}).get(blog_id, {}).get("data", {})
+                if contents_count:
+                    post_count = contents_count.get("postCount", post_count)
+            else:
+                soup = BeautifulSoup(html, "html.parser")
+                title_tag = soup.find("title")
+                if title_tag:
+                    nickname = title_tag.text.split(":")[0].strip()
+    except Exception as e:
+        print(f"Error scraping profile: {e}")
+        
+    if today_visitor == 0 or total_visitor == 0:
+        try:
+            visitor_url = f"https://blog.naver.com/NVisitorgp4.naver?blogId={blog_id}"
+            v_res = requests.get(visitor_url, headers=headers, timeout=10)
+            if v_res.status_code == 200:
+                v_html = v_res.text
+                today_match = re.search(r'<visitor cnt="(\d+)" id="\d+"', v_html)
+                total_match = re.search(r'<visitor cnt="(\d+)" id="total"', v_html)
+                if today_match:
+                    today_visitor = int(today_match.group(1))
+                if total_match:
+                    total_visitor = int(total_match.group(1))
+        except Exception as ve:
+            print(f"Error fetching visitor backup: {ve}")
+            
+    return {
+        "nickname": nickname,
+        "profile_image": profile_image,
+        "directory_name": directory_name,
+        "subscriber_count": subscriber_count,
+        "today_visitor": today_visitor,
+        "total_visitor": total_visitor,
+        "post_count": post_count
+    }
+
+@app.get("/api/blog/index/profile")
+async def get_blog_index_profile(
+    blog_id: str = Query(..., description="네이버 블로그 ID 입력")
+):
+    if not blog_id or not blog_id.strip():
+        raise HTTPException(status_code=400, detail="블로그 ID를 입력해 주세요.")
+        
+    blog_id = blog_id.strip()
+    
+    # 3시간 캐시 확인
+    now = datetime.now()
+    if blog_id in blog_profile_cache:
+        cached = blog_profile_cache[blog_id]
+        if (now - cached["timestamp"]).total_seconds() < 10800:
+            return cached["data"]
+            
+    try:
+        loop = asyncio.get_event_loop()
+        
+        # 프로필 정보 가져오기
+        profile_data = await loop.run_in_executor(executor, scrape_blog_profile, blog_id)
+        
+        # 최초 개설일 가져오기
+        created_date = await loop.run_in_executor(executor, get_blog_creation_date, blog_id)
+        profile_data["created_date"] = created_date
+        
+        # 인기글 TOP 10 가져오기
+        popular_posts = []
+        popular_url = f"https://m.blog.naver.com/api/blogs/{blog_id}/popular-post-list"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+            'Referer': f'https://m.blog.naver.com/{blog_id}'
+        }
+        
+        def fetch_popular():
+            try:
+                res = requests.get(popular_url, headers=headers, timeout=10)
+                if res.status_code == 200:
+                    data = res.json()
+                    return data.get("result", {}).get("popularPostList", [])
+            except Exception as e:
+                print(f"Error fetching popular posts: {e}")
+            return []
+            
+        pop_list = await loop.run_in_executor(executor, fetch_popular)
+        
+        for p in pop_list[:10]:
+            title_raw = p.get("titleWithInspectMessage", "")
+            title = BeautifulSoup(urllib.parse.unquote_plus(title_raw), "html.parser").text
+            popular_posts.append({
+                "log_no": str(p.get("logNo")),
+                "title": title,
+                "comment_count": p.get("commentCnt", 0),
+                "sympathy_count": p.get("sympathyCnt", 0),
+                "link": f"https://blog.naver.com/{blog_id}/{p.get('logNo')}"
+            })
+            
+        profile_data["popular_posts"] = popular_posts
+        
+        # 최근 포스트 15개 기본 정보 가져오기
+        recent_posts = []
+        recent_url = f"https://m.blog.naver.com/api/blogs/{blog_id}/post-list?categoryNo=0&currentPage=1&countPerPage=15"
+        
+        def fetch_recent():
+            try:
+                res = requests.get(recent_url, headers=headers, timeout=10)
+                if res.status_code == 200:
+                    data = res.json()
+                    return data.get("result", {}).get("items", [])
+            except Exception as e:
+                print(f"Error fetching recent posts: {e}")
+            return []
+            
+        rec_list = await loop.run_in_executor(executor, fetch_recent)
+        
+        for p in rec_list:
+            title_raw = p.get("titleWithInspectMessage", "")
+            title = BeautifulSoup(urllib.parse.unquote_plus(title_raw), "html.parser").text
+            
+            # addDate가 타임스탬프(밀리초)일 것이므로 변환
+            add_date_ts = p.get("addDate")
+            pub_date = ""
+            if add_date_ts:
+                try:
+                    pub_date = datetime.fromtimestamp(add_date_ts / 1000.0).strftime("%Y-%m-%d")
+                except:
+                    pub_date = str(add_date_ts)
+                    
+            recent_posts.append({
+                "log_no": str(p.get("logNo")),
+                "title": title,
+                "comment_count": p.get("commentCnt", 0),
+                "sympathy_count": p.get("sympathyCnt", 0),
+                "category_name": p.get("categoryName", "전체"),
+                "pub_date": pub_date,
+                "link": f"https://blog.naver.com/{blog_id}/{p.get('logNo')}"
+            })
+            
+        profile_data["recent_posts"] = recent_posts
+        
+        # 캐싱
+        blog_profile_cache[blog_id] = {
+            "data": profile_data,
+            "timestamp": now
+        }
+        
+        return profile_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"블로그 데이터 로드 중 오류: {str(e)}")
+
+@app.get("/api/blog/index/post-detail")
+async def get_blog_index_post_detail(
+    blog_id: str = Query(..., description="네이버 블로그 ID 입력"),
+    log_no: str = Query(..., description="포스트 고유 logNo 입력"),
+    title: str = Query(..., description="포스트 제목")
+):
+    if not blog_id or not log_no or not title:
+        raise HTTPException(status_code=400, detail="필수 매개변수가 누락되었습니다.")
+        
+    blog_id = blog_id.strip()
+    log_no = log_no.strip()
+    title = title.strip()
+    
+    # 캐시 확인
+    now = datetime.now()
+    cache_key = (blog_id, log_no)
+    if cache_key in blog_post_detail_cache:
+        cached = blog_post_detail_cache[cache_key]
+        if (now - cached["timestamp"]).total_seconds() < 10800:
+            return cached["data"]
+            
+    try:
+        loop = asyncio.get_event_loop()
+        
+        # 1. 포스트 순위 검색
+        rank = await loop.run_in_executor(executor, check_naver_search_rank, blog_id, log_no, title)
+        
+        # 2. 포스트 상세 지표 스크래핑
+        def scrape_post_detail():
+            post_url = f"https://blog.naver.com/PostView.naver?blogId={blog_id}&logNo={log_no}"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+            res_dict = {
+                "chars_count": 0,
+                "images_count": 0,
+                "videos_count": 0,
+                "quotes_count": 0,
+                "gifs_count": 0,
+                "maps_count": 0,
+                "links_count": 0
+            }
+            try:
+                response = requests.get(post_url, headers=headers, timeout=10)
+                response.encoding = "utf-8"
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.text, "html.parser")
+                    viewer = soup.find(class_="se-viewer")
+                    if viewer:
+                        text = viewer.get_text()
+                        res_dict["chars_count"] = len("".join(text.split()))
+                        res_dict["images_count"] = len(viewer.find_all(class_="se-image"))
+                        res_dict["videos_count"] = len(viewer.find_all(class_="se-video"))
+                        res_dict["quotes_count"] = len(viewer.find_all(class_="se-quote"))
+                        res_dict["maps_count"] = len(viewer.find_all(class_="se-map"))
+                        
+                        gifs = 0
+                        imgs = viewer.find_all("img")
+                        for img in imgs:
+                            src = img.get("src", "") or img.get("data-lazy-src", "")
+                            if src and (".gif" in src.lower() or "gif" in src.lower()):
+                                gifs += 1
+                        res_dict["gifs_count"] = gifs
+                        
+                        links = viewer.find_all("a")
+                        out_links = 0
+                        for a in links:
+                            href = a.get("href", "")
+                            if href and "blog.naver.com" not in href and ("http://" in href or "https://" in href):
+                                out_links += 1
+                        res_dict["links_count"] = out_links
+            except Exception as e:
+                print(f"Error scraping post detail {log_no}: {e}")
+            return res_dict
+            
+        detail_metrics = await loop.run_in_executor(executor, scrape_post_detail)
+        
+        # 노출 상태 및 종합 등급 판정
+        is_exposed = (rank > 0)
+        status = "누락"
+        if not is_exposed:
+            status = "누락"
+        elif detail_metrics["links_count"] >= 3 or detail_metrics["chars_count"] < 300:
+            status = "위험"
+        elif (detail_metrics["chars_count"] >= 1200 and detail_metrics["images_count"] >= 7) or rank == 1:
+            status = "최적"
+        else:
+            status = "활성"
+            
+        detail_data = {
+            "log_no": log_no,
+            "chars_count": detail_metrics["chars_count"],
+            "images_count": detail_metrics["images_count"],
+            "videos_count": detail_metrics["videos_count"],
+            "quotes_count": detail_metrics["quotes_count"],
+            "gifs_count": detail_metrics["gifs_count"],
+            "maps_count": detail_metrics["maps_count"],
+            "links_count": detail_metrics["links_count"],
+            "exposure": "O" if is_exposed else "X",
+            "rank": rank if is_exposed else "-",
+            "status": status
+        }
+        
+        # 캐싱
+        blog_post_detail_cache[cache_key] = {
+            "data": detail_data,
+            "timestamp": now
+        }
+        
+        return detail_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"포스팅 상세 진단 중 오류: {str(e)}")
+
 # 정적 파일 서빙 등록 (프론트엔드 static 폴더)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
