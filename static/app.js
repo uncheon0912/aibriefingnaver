@@ -1942,19 +1942,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // 종합 지수 합산 (가중치 적용)
                 let finalScore = 0;
-                let gradeText = "저품질";
+                let gradeText = "일반";
 
-                // 누락 포스팅이 90% 이상인 경우 점수 미측정(0점) 및 저품질 처리
-                if (missingRatio >= 90) {
+                if (missingRatio === 100) {
                     finalScore = 0;
                     gradeText = "저품질";
+                } else if (missingRatio >= 90) {
+                    finalScore = 0;
+                    gradeText = "저품질 위험";
                 } else {
                     finalScore = Math.round((activeScore * 0.4) + ((100 - missingPenalty) * 0.4) + ((100 - warningPenalty) * 0.2));
                     finalScore = Math.max(5, Math.min(100, finalScore)); // 5점~100점 제한
 
                     // 등급 판정
                     if (finalScore < 30 || missingRatio >= 60) {
-                        gradeText = "저품질";
+                        gradeText = "일반";
                     } else if (finalScore < 80) {
                         // 준최 1~7 분할
                         const junLevel = Math.ceil((finalScore - 29) / 7.15); // 30점부터 80점 미만 구간
@@ -1972,14 +1974,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     blogGradeText.textContent = gradeText;
                     // 등급에 따라 네온 색상 다르게 노출
                     if (gradeText.includes("최적")) {
-                        blogGradeText.style.color = "var(--neon-purple)";
-                        blogGradeText.style.textShadow = "0 0 10px var(--neon-purple-glow)";
+                        blogGradeText.style.color = "#ff8c00"; // 최적: 주황색
+                        blogGradeText.style.textShadow = "0 0 12px rgba(255, 140, 0, 0.6)";
                     } else if (gradeText.includes("준최")) {
-                        blogGradeText.style.color = "var(--neon-green)";
+                        blogGradeText.style.color = "var(--neon-green)"; // 준최: 연두색
                         blogGradeText.style.textShadow = "0 0 10px var(--neon-green-glow)";
                     } else {
-                        blogGradeText.style.color = "#ff3b30";
-                        blogGradeText.style.textShadow = "0 0 10px rgba(255, 59, 48, 0.4)";
+                        blogGradeText.style.color = "#a69ebd"; // 일반/저품질/저품질위험: 회색
+                        blogGradeText.style.textShadow = "none";
                     }
                 }
                 setScoreRing(finalScore);
