@@ -1842,7 +1842,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     `;
 
                     // 백엔드 개별 상세 API 호출
-                    const detailRes = await fetch(`/api/blog/index/post-detail?blog_id=${blogId}&log_no=${post.log_no}&title=${encodeURIComponent(post.title)}`);
+                    const detailRes = await fetch(`/api/blog/index/post-detail?blog_id=${blogId}&log_no=${post.log_no}&title=${encodeURIComponent(post.title)}&pub_date=${post.pub_date}`);
                     if (detailRes.ok) {
                         const detailData = await detailRes.json();
                         // 메타 데이터와 상세 데이터 결합
@@ -1883,6 +1883,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 let activeCount = 0;
                 let warningCount = 0;
                 let missingCount = 0;
+                let pendingCount = 0;
 
                 let totalChars = 0;
                 let totalImages = 0;
@@ -1892,6 +1893,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (p.status === "최적") optimalCount++;
                     else if (p.status === "활성") activeCount++;
                     else if (p.status === "위험") warningCount++;
+                    else if (p.status === "반영중") pendingCount++;
                     else missingCount++;
 
                     totalChars += p.chars_count || 0;
@@ -1899,10 +1901,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     totalLikesComments += (p.comment_count || 0) + (p.sympathy_count || 0);
                 });
 
-                const optimalRatio = Math.round((optimalCount / totalPostsCount) * 100);
-                const activeRatio = Math.round((activeCount / totalPostsCount) * 100);
-                const warningRatio = Math.round((warningCount / totalPostsCount) * 100);
-                const missingRatio = Math.round((missingCount / totalPostsCount) * 100);
+                // 분석 대상 수 (반영중 글은 지수 및 비율 연산 모수에서 제외)
+                const analyzedCount = Math.max(1, totalPostsCount - pendingCount);
+
+                const optimalRatio = Math.round((optimalCount / analyzedCount) * 100);
+                const activeRatio = Math.round((activeCount / analyzedCount) * 100);
+                const warningRatio = Math.round((warningCount / analyzedCount) * 100);
+                const missingRatio = Math.round((missingCount / analyzedCount) * 100);
 
                 // 통계 바 갱신
                 if (statOptimalCnt) statOptimalCnt.textContent = `${optimalCount}건 (${optimalRatio}%)`;
@@ -1917,48 +1922,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (statMissingCnt) statMissingCnt.textContent = `${missingCount}건 (${missingRatio}%)`;
                 if (statMissingBar) statMissingBar.style.width = `${missingRatio}%`;
 
-                // 점수 계산 (독창적 알고리즘)
-                // 1) 활성 지수 (100점 만점)
-                const avgChars = totalChars / totalPostsCount;
-                const avgImages = totalImages / totalPostsCount;
-                const avgResponse = totalLikesComments / totalPostsCount;
-
-                let activeScore = 0;
-                if (avgChars >= 1500) activeScore += 30;
-                else if (avgChars >= 1000) activeScore += 20;
-                else if (avgChars >= 500) activeScore += 10;
-
-                if (avgImages >= 10) activeScore += 30;
-                else if (avgImages >= 5) activeScore += 20;
-                else if (avgImages >= 3) activeScore += 10;
-
-                if (avgResponse >= 3) activeScore += 40;
-                else if (avgResponse >= 1) activeScore += 35;
-                else if (avgResponse >= 0.5) activeScore += 20;
-                else activeScore += 5;
-
-                // 2) 누락 감점 비율 (0~100)
-                const missingPenalty = (missingCount / totalPostsCount) * 100;
-
-                // 3) 위험 감점 비율 (0~100)
-                const warningPenalty = (warningCount / totalPostsCount) * 100;
-
-                // 종합 지수 합산 (가중치 적용)
+                // 점수 계산 (고도화 품질/감점 알고리즘)
                 let finalScore = 0;
                 let gradeText = "일반";
 
-                if (missingRatio === 100) {
-                    finalScore = 0;
+                if (missingRatio >= 50) {
+                    // 1) 누락 비율 50% 이상: 저품질 확정 (레퍼런스 동일 10점대 점수 산정)
+                    finalScore = Math.round(15 * (1 - (missingRatio / 100))) + 5;
+                    finalScore = Math.max(5, Math.min(19, finalScore));
                     gradeText = "저품질";
-                } else if (missingRatio >= 90) {
-                    finalScore = 0;
+                } else if (missingRatio >= 35) {
+                    // 2) 누락 비율 35% 이상 50% 미만: 저품질 위험 (20점대 점수 산정)
+                    finalScore = Math.round(10 * (1 - (missingRatio / 100))) + 20;
+                    finalScore = Math.max(20, Math.min(29, finalScore));
                     gradeText = "저품질 위험";
+                } else if (missingRatio >= 20) {
+                    // 3) 누락 비율 20% 이상 35% 미만: 최대 일반 등급 제한 (30~49점)
+                    finalScore = Math.round(20 * (1 - (missingRatio / 100))) + 30;
+                    finalScore = Math.max(30, Math.min(49, finalScore));
+                    gradeText = "일반";
                 } else {
-                    finalScore = Math.round((activeScore * 0.4) + ((100 - missingPenalty) * 0.4) + ((100 - warningPenalty) * 0.2));
-                    finalScore = Math.max(5, Math.min(100, finalScore)); // 5점~100점 제한
+                    // 4) 누락이 적은 일반 블로그: 최적화 지표 기반 연산
+                    const baseScore = (optimalRatio * 1.0) + (activeRatio * 0.6) + (warningRatio * 0.3);
+                    const penalty = missingRatio * 1.2;
+                    finalScore = Math.round(baseScore - penalty);
+                    finalScore = Math.max(5, Math.min(100, finalScore));
 
                     // 등급 판정
-                    if (finalScore < 30 || missingRatio >= 60) {
+                    if (finalScore < 30) {
                         gradeText = "일반";
                     } else if (finalScore < 80) {
                         // 준최 1~7 분할
@@ -2023,11 +2014,13 @@ document.addEventListener("DOMContentLoaded", () => {
         let activeCount = 0;
         let warningCount = 0;
         let missingCount = 0;
+        let pendingCount = 0;
 
         blogPostsData.forEach(p => {
             if (p.status === "최적") optimalCount++;
             else if (p.status === "활성") activeCount++;
             else if (p.status === "위험") warningCount++;
+            else if (p.status === "반영중") pendingCount++;
             else missingCount++;
 
             // 필터링 적용
@@ -2041,6 +2034,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 statusBadge = `<span class="idx-badge active">활성</span>`;
             } else if (p.status === "위험") {
                 statusBadge = `<span class="idx-badge warning">위험</span>`;
+            } else if (p.status === "반영중") {
+                statusBadge = `<span class="idx-badge pending" style="background-color: var(--neon-blue); color: #fff; text-shadow: 0 0 6px var(--neon-blue-glow);">반영중</span>`;
             }
 
             html += `
@@ -2074,6 +2069,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (filterActiveCnt) filterActiveCnt.textContent = activeCount;
         if (filterWarningCnt) filterWarningCnt.textContent = warningCount;
         if (filterMissingCnt) filterMissingCnt.textContent = missingCount;
+        const filterPendingCnt = document.getElementById("filter-pending-cnt");
+        if (filterPendingCnt) filterPendingCnt.textContent = pendingCount;
     }
 
     // 필터 탭 클릭 핸들러 바인딩

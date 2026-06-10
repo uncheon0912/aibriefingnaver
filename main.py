@@ -2024,75 +2024,88 @@ blog_post_detail_cache = {}  # { (blog_id, log_no): { "data": detail_data, "time
 def check_naver_search_rank(blog_id: str, log_no: str, title: str) -> int:
     """
     블로그 포스팅의 네이버 검색 노출 여부를 판별합니다.
-    1차: 블로그 검색탭(where=m_blog)에서 제목 검색 후 해당 글 링크 존재 여부 확인
-    2차: 포스팅 URL 직접 접근 시 HTTP 200 응답이면 노출로 처리 (색인된 글은 접근 가능)
+    1차: 제목을 정제하여 모바일 블로그 검색탭(where=m_blog)에서 검색 후 확인
+    2차: 정제된 제목을 큰따옴표로 묶어 모바일 블로그 검색탭(where=m_blog)에서 정확한 완전 일치 검색 수행
+    3차: 모바일 통합검색(where=nexearch)에서 제목 검색 후 확인
     """
-    headers_mobile = {
+    headers = {
         "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
     }
-    headers_pc = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
+    
+    # 제목 정제: 특수문자 및 불필요한 기호 제거, 연속 공백 정리
+    cleaned_title = re.sub(r"[^\w\sㄱ-ㅎㅏ-ㅣ가-힣]", " ", title)
+    cleaned_title = " ".join(cleaned_title.split())
+    # 너무 긴 제목은 네이버 검색 시 쿼리 길이 제한으로 매칭 오류를 유발할 수 있으므로 앞 25자만 슬라이싱
+    short_title = cleaned_title[:25].strip()
+    
+    if not short_title:
+        short_title = title[:20].strip()
 
     try:
-        # ===== 1차 체크: 블로그 검색탭에서 제목 키워드로 검색 =====
-        encoded_query = urllib.parse.quote(title)
+        # ===== 1차 체크: 정제된 제목으로 블로그 검색탭 검색 =====
+        encoded_query = urllib.parse.quote(short_title)
         url = f"https://m.search.naver.com/search.naver?where=m_blog&query={encoded_query}"
-        res = requests.get(url, headers=headers_mobile, timeout=10)
+        res = requests.get(url, headers=headers, timeout=8)
         if res.status_code == 200:
             html = res.text
-            # 1-1: HTML 내부에 log_no와 blog_id 직접 포함 여부
             if log_no in html and blog_id.lower() in html.lower():
+                # 순위 확인용 링크 파싱
+                soup = BeautifulSoup(html, "html.parser")
+                links = soup.find_all("a")
+                seen_logs = set()
+                ranked_posts = []
+                for a in links:
+                    href = a.get("href", "")
+                    if not href:
+                        continue
+                    try:
+                        decoded_href = urllib.parse.unquote(href)
+                    except:
+                        decoded_href = href
+                    m1 = re.search(r"blog\.naver\.com/([a-zA-Z0-9_-]+)/(\d+)", decoded_href)
+                    if m1:
+                        b_id = m1.group(1)
+                        l_no = m1.group(2)
+                        if l_no not in seen_logs:
+                            seen_logs.add(l_no)
+                            ranked_posts.append((b_id, l_no))
+                        continue
+                    m2_id = re.search(r"blogId=([a-zA-Z0-9_-]+)", decoded_href)
+                    m2_no = re.search(r"logNo=(\d+)", decoded_href)
+                    if m2_id and m2_no:
+                        b_id = m2_id.group(1)
+                        l_no = m2_no.group(2)
+                        if l_no not in seen_logs:
+                            seen_logs.add(l_no)
+                            ranked_posts.append((b_id, l_no))
+                for idx, (b_id, l_no) in enumerate(ranked_posts):
+                    if l_no == log_no and b_id.lower() == blog_id.lower():
+                        return idx + 1
+                if log_no in html:
+                    return 1
+
+        # ===== 2차 체크: 제목 큰따옴표 감싸서 완전 일치 문서 검색 (매우 강력) =====
+        quoted_query = urllib.parse.quote(f'"{short_title}"')
+        url_quoted = f"https://m.search.naver.com/search.naver?where=m_blog&query={quoted_query}"
+        res_quoted = requests.get(url_quoted, headers=headers, timeout=8)
+        if res_quoted.status_code == 200:
+            html_quoted = res_quoted.text
+            if log_no in html_quoted and blog_id.lower() in html_quoted.lower():
                 return 1
-            # 1-2: 링크 파싱을 통해 정확한 노출 순위 추출
-            soup = BeautifulSoup(html, "html.parser")
-            links = soup.find_all("a")
-            seen_logs = set()
-            ranked_posts = []
-            for a in links:
-                href = a.get("href", "")
-                if not href:
-                    continue
-                try:
-                    decoded_href = urllib.parse.unquote(href)
-                except:
-                    decoded_href = href
-                m1 = re.search(r"blog\.naver\.com/([a-zA-Z0-9_-]+)/(\d+)", decoded_href)
-                if m1:
-                    b_id = m1.group(1)
-                    l_no = m1.group(2)
-                    if l_no not in seen_logs:
-                        seen_logs.add(l_no)
-                        ranked_posts.append((b_id, l_no))
-                    continue
-                m2_id = re.search(r"blogId=([a-zA-Z0-9_-]+)", decoded_href)
-                m2_no = re.search(r"logNo=(\d+)", decoded_href)
-                if m2_id and m2_no:
-                    b_id = m2_id.group(1)
-                    l_no = m2_no.group(2)
-                    if l_no not in seen_logs:
-                        seen_logs.add(l_no)
-                        ranked_posts.append((b_id, l_no))
-            for idx, (b_id, l_no) in enumerate(ranked_posts):
-                if l_no == log_no and b_id.lower() == blog_id.lower():
-                    return idx + 1
-            # 1-3: log_no 단독 포함 구제 조건
-            if log_no in html:
+            if log_no in html_quoted:
                 return 1
 
-        # ===== 2차 체크: 포스팅 URL 직접 접근 (HTTP 200 = 색인된 글) =====
-        # 검색 결과에 없어도 포스팅이 실제로 접근 가능하면 '노출'로 처리합니다.
-        post_url = f"https://blog.naver.com/{blog_id}/{log_no}"
-        try:
-            post_res = requests.get(post_url, headers=headers_pc, timeout=8, allow_redirects=True)
-            if post_res.status_code == 200:
-                # 블로그 본문 페이지인지 확인 (에러 페이지가 아닌 경우)
-                if blog_id.lower() in post_res.url.lower() or log_no in post_res.text:
-                    return 1  # 접근 가능 = 색인됨 = 노출
-        except Exception:
-            pass
+        # ===== 3차 체크: 모바일 통합검색(nexearch)에서 체크 =====
+        url_next = f"https://m.search.naver.com/search.naver?where=nexearch&query={encoded_query}"
+        res_next = requests.get(url_next, headers=headers, timeout=8)
+        if res_next.status_code == 200:
+            html_next = res_next.text
+            if log_no in html_next and blog_id.lower() in html_next.lower():
+                return 1
+            if log_no in html_next:
+                return 1
 
-        return 0  # 검색에도 없고, 직접 접근도 실패 = 진짜 누락
+        return 0  # 모든 검색에서 누락된 진짜 누락
     except Exception as e:
         print(f"Error checking rank: {e}")
         return 0
@@ -2581,7 +2594,9 @@ async def get_blog_index_post_detail(
 
     log_no: str = Query(..., description="포스트 고유 logNo 입력"),
 
-    title: str = Query(..., description="포스트 제목")
+    title: str = Query(..., description="포스트 제목"),
+
+    pub_date: str = Query(None, description="포스트 발행일 (YYYY-MM-DD)")
 
 ):
 
@@ -2709,6 +2724,34 @@ async def get_blog_index_post_detail(
 
         detail_metrics = await loop.run_in_executor(executor, scrape_post_detail)
 
+        # 반영중 체크 (발행일이 오늘로부터 3일 이내인 글이 아직 검색 미노출인 경우)
+
+        is_pending = False
+
+        if pub_date:
+
+            pub_date_str = pub_date.strip()
+
+            if "전" in pub_date_str or "방금" in pub_date_str or "어제" in pub_date_str:
+
+                is_pending = True
+
+            else:
+
+                try:
+
+                    pub_datetime = datetime.strptime(pub_date_str, "%Y-%m-%d")
+
+                    days_diff = (datetime.today() - pub_datetime).days
+
+                    if days_diff <= 2:  # 당일 포함 3일 (0, 1, 2일 차이)
+
+                        is_pending = True
+
+                except Exception as e:
+
+                    print(f"Error parsing pub_date {pub_date}: {e}")
+
         # 노출 상태 및 종합 등급 판정
 
         is_exposed = (rank > 0)
@@ -2717,7 +2760,13 @@ async def get_blog_index_post_detail(
 
         if not is_exposed:
 
-            status = "누락"
+            if is_pending:
+
+                status = "반영중"
+
+            else:
+
+                status = "누락"
 
         elif detail_metrics["links_count"] >= 3 or detail_metrics["chars_count"] < 300:
 
@@ -2749,7 +2798,7 @@ async def get_blog_index_post_detail(
 
             "links_count": detail_metrics["links_count"],
 
-            "exposure": "O" if is_exposed else "X",
+            "exposure": "O" if is_exposed else ("반영중" if status == "반영중" else "X"),
 
             "rank": rank if is_exposed else "-",
 
